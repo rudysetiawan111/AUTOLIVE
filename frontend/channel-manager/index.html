@@ -1,1 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Channel Manager</title>
+</head>
+<body>
+  <h1>Channel Manager</h1>
+  <ul id="channel-list"></ul>
 
+  <script>
+    const channels = [
+      { name: 'YouTube Channel 1', platform: 'YouTube' },
+      { name: 'TikTok User Demo', platform: 'TikTok' }
+    ];
+
+    const list = document.getElementById('channel-list');
+    channels.forEach(c => {
+      list.innerHTML += `<li>[${c.platform}] ${c.name}</li>`;
+    });
+  </script>
+</body>
+</html>
