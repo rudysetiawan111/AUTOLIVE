@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AUTOLIVE Dashboard</title>
+  <title>AUTOLIVE Dashboard Login</title>
   <style>
     body { font-family: Arial; text-align: center; margin-top: 50px; }
     button { margin: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
@@ -20,23 +20,17 @@
   </div>
 
   <script>
-    // =======================
-    // Google Login (Dummy)
-    // =======================
+    // Google Login (dummy)
     document.getElementById('loginGoogle').onclick = () => {
-      // Dummy OAuth redirect flow
       alert('Google login successful (dummy)');
-      window.location.href = 'home.html'; // redirect ke beranda
+      window.location.href = 'home.html';
     };
 
-    // =======================
-    // TikTok Login (OAuth)
-    // =======================
+    // TikTok Login
     const TIKTOK_CLIENT_KEY = "awf22yr9a734f9s2";
-    const REDIRECT_URI = "https://autolive-production-f7d4.up.railway.app/home.html";
-
+    const REDIRECT_URI = "home.html";
     document.getElementById('loginTikTok').onclick = () => {
-      const state = 'demoState123'; // bisa random string
+      const state = 'demoState123';
       const scope = 'user.info.basic,user.info.stats,video.list';
       const url = `https://www.tiktok.com/auth/authorize?client_key=${TIKTOK_CLIENT_KEY}&response_type=code&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${state}`;
       window.location.href = url;
