@@ -1,1 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AUTOLIVE Dashboard</title>
+  <link rel="stylesheet" href="../components/header.html">
+</head>
+<body>
+  <header>
+    <h1>AUTOLIVE Dashboard</h1>
+  </header>
 
+  <section id="summary">
+    <h2>Summary</h2>
+    <div id="yt-summary"></div>
+    <div id="tt-summary"></div>
+  </section>
+
+  <script>
+    // Dummy fetch YouTube & TikTok data
+    const ytVideos = [
+      { title: 'YouTube Video 1', views: 15000, likes: 800 },
+      { title: 'YouTube Video 2', views: 32000, likes: 2400 }
+    ];
+    const ttVideos = [
+      { title: 'Funny Cat Video', views: 12345, likes: 1200 },
+      { title: 'Trending Dance', views: 45678, likes: 3450 }
+    ];
+
+    const ytDiv = document.getElementById('yt-summary');
+    ytVideos.forEach(v => {
+      ytDiv.innerHTML += `<p>[YouTube] ${v.title} - Views: ${v.views}, Likes: ${v.likes}</p>`;
+    });
+
+    const ttDiv = document.getElementById('tt-summary');
+    ttVideos.forEach(v => {
+      ttDiv.innerHTML += `<p>[TikTok] ${v.title} - Views: ${v.views}, Likes: ${v.likes}</p>`;
+    });
+  </script>
+</body>
+</html>
