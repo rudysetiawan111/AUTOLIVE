@@ -1,1 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Viral Discovery</title>
+</head>
+<body>
+  <h1>Viral Discovery</h1>
+  <ul id="viral-list"></ul>
 
+  <script>
+    const viral = [
+      { title: 'Trending TikTok Dance', platform: 'TikTok', views: 45678 },
+      { title: 'Popular YouTube Video', platform: 'YouTube', views: 32000 }
+    ];
+
+    const list = document.getElementById('viral-list');
+    viral.forEach(v => {
+      list.innerHTML += `<li>[${v.platform}] ${v.title} - Views: ${v.views}</li>`;
+    });
+  </script>
+</body>
+</html>
