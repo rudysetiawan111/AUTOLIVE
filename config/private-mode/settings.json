@@ -1,1 +1,4 @@
-
+{
+  "privateMode": true,
+  "debug": true
+}
