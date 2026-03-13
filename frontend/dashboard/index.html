@@ -3,39 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <title>AUTOLIVE Dashboard</title>
-  <link rel="stylesheet" href="../components/header.html">
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 50px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>AUTOLIVE Dashboard</h1>
-  </header>
 
-  <section id="summary">
-    <h2>Summary</h2>
-    <div id="yt-summary"></div>
-    <div id="tt-summary"></div>
-  </section>
+  <h1># Welcome to AUTOLIVE</h1>
+  <p>Manage and analyze trending YouTube & TikTok videos</p>
+
+  <!-- Login Buttons -->
+  <div>
+    <button id="loginGoogle">Login with Google</button>
+    <button id="loginTikTok">Login with TikTok</button>
+  </div>
 
   <script>
-    // Dummy fetch YouTube & TikTok data
-    const ytVideos = [
-      { title: 'YouTube Video 1', views: 15000, likes: 800 },
-      { title: 'YouTube Video 2', views: 32000, likes: 2400 }
-    ];
-    const ttVideos = [
-      { title: 'Funny Cat Video', views: 12345, likes: 1200 },
-      { title: 'Trending Dance', views: 45678, likes: 3450 }
-    ];
+    // =======================
+    // Google Login (Dummy)
+    // =======================
+    document.getElementById('loginGoogle').onclick = () => {
+      // Dummy OAuth redirect flow
+      alert('Google login successful (dummy)');
+      window.location.href = 'home.html'; // redirect ke beranda
+    };
 
-    const ytDiv = document.getElementById('yt-summary');
-    ytVideos.forEach(v => {
-      ytDiv.innerHTML += `<p>[YouTube] ${v.title} - Views: ${v.views}, Likes: ${v.likes}</p>`;
-    });
+    // =======================
+    // TikTok Login (OAuth)
+    // =======================
+    const TIKTOK_CLIENT_KEY = "awf22yr9a734f9s2";
+    const REDIRECT_URI = "https://autolive-production-f7d4.up.railway.app/home.html";
 
-    const ttDiv = document.getElementById('tt-summary');
-    ttVideos.forEach(v => {
-      ttDiv.innerHTML += `<p>[TikTok] ${v.title} - Views: ${v.views}, Likes: ${v.likes}</p>`;
-    });
+    document.getElementById('loginTikTok').onclick = () => {
+      const state = 'demoState123'; // bisa random string
+      const scope = 'user.info.basic,user.info.stats,video.list';
+      const url = `https://www.tiktok.com/auth/authorize?client_key=${TIKTOK_CLIENT_KEY}&response_type=code&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${state}`;
+      window.location.href = url;
+    };
   </script>
+
 </body>
 </html>
