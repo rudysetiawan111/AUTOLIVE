@@ -1,1 +1,1019 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penjadwalan Automation - Sistem Automation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 1200px;
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        /* Navigation */
+        .nav {
+            background: white;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav a i {
+            font-size: 1.1em;
+        }
+
+        .nav a:hover {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .nav a.active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Main Content */
+        .content {
+            padding: 30px;
+        }
+
+        /* Schedule Header */
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .schedule-header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .btn-filter {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-filter:hover {
+            background: #5a67d8;
+        }
+
+        /* Schedule Grid */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .schedule-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .schedule-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .schedule-card.active {
+            border-left: 4px solid #48bb78;
+        }
+
+        .schedule-card.inactive {
+            border-left: 4px solid #f56565;
+            opacity: 0.8;
+        }
+
+        .schedule-card.pending {
+            border-left: 4px solid #ecc94b;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .card-title h3 {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .card-title .task-type {
+            font-size: 0.85em;
+            color: #666;
+            background: #f0f0f0;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-badge.inactive {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-badge.pending {
+            background: #feebc8;
+            color: #744210;
+        }
+
+        .schedule-info {
+            margin: 15px 0;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .info-item i {
+            width: 20px;
+            color: #667eea;
+        }
+
+        .recurrence-badge {
+            display: inline-block;
+            background: #e9d8fd;
+            color: #553c9a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #5a67d8;
+        }
+
+        .btn-toggle {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-toggle:hover {
+            background: #38a169;
+        }
+
+        .btn-delete {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #e53e3e;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .schedule-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .schedule-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-clock"></i> Penjadwalan Automation</h1>
+            <p>Kelola jadwal otomatisasi tugas dan pekerjaan Anda</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav">
+            <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="tasks.html"><i class="fas fa-tasks"></i> Tasks</a>
+            <a href="workflows.html"><i class="fas fa-project-diagram"></i> Workflows</a>
+            <a href="#" class="active"><i class="fas fa-clock"></i> Schedule</a>
+            <a href="logs.html"><i class="fas fa-history"></i> Logs</a>
+            <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Schedule Header -->
+            <div class="schedule-header">
+                <h2><i class="fas fa-calendar-alt"></i> Daftar Jadwal</h2>
+                <button class="btn-add" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i> Tambah Jadwal Baru
+                </button>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label><i class="fas fa-filter"></i> Status</label>
+                    <select id="statusFilter" onchange="filterSchedules()">
+                        <option value="all">Semua Status</option>
+                        <option value="active">Aktif</option>
+                        <option value="inactive">Nonaktif</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-tag"></i> Tipe Tugas</label>
+                    <select id="typeFilter" onchange="filterSchedules()">
+                        <option value="all">Semua Tipe</option>
+                        <option value="backup">Backup</option>
+                        <option value="report">Report</option>
+                        <option value="sync">Sinkronisasi</option>
+                        <option value="cleanup">Cleanup</option>
+                        <option value="notification">Notifikasi</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-search"></i> Cari</label>
+                    <input type="text" id="searchInput" placeholder="Cari jadwal..." onkeyup="filterSchedules()">
+                </div>
+                <button class="btn-filter" onclick="filterSchedules()">
+                    <i class="fas fa-sync-alt"></i> Terapkan Filter
+                </button>
+            </div>
+
+            <!-- Schedule Grid -->
+            <div class="schedule-grid" id="scheduleGrid">
+                <!-- Schedule cards will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal" id="scheduleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Tambah Jadwal Baru</h3>
+                <p>Isi detail jadwal automation</p>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleForm">
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> Nama Jadwal</label>
+                        <input type="text" id="scheduleName" placeholder="Contoh: Backup Database Harian" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-align-left"></i> Deskripsi</label>
+                        <textarea id="scheduleDesc" rows="3" placeholder="Deskripsi jadwal..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-tasks"></i> Tipe Tugas</label>
+                            <select id="taskType" required>
+                                <option value="">Pilih tipe tugas</option>
+                                <option value="backup">Backup Database</option>
+                                <option value="report">Generate Report</option>
+                                <option value="sync">Sinkronisasi Data</option>
+                                <option value="cleanup">Cleanup File</option>
+                                <option value="notification">Kirim Notifikasi</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-clock"></i> Frekuensi</label>
+                            <select id="frequency" required>
+                                <option value="">Pilih frekuensi</option>
+                                <option value="hourly">Setiap Jam</option>
+                                <option value="daily">Harian</option>
+                                <option value="weekly">Mingguan</option>
+                                <option value="monthly">Bulanan</option>
+                                <option value="custom">Kustom (Cron)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-day"></i> Tanggal Mulai</label>
+                            <input type="datetime-local" id="startDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-times"></i> Tanggal Selesai (Opsional)</label>
+                            <input type="datetime-local" id="endDate">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="cronExpressionGroup" style="display: none;">
+                        <label><i class="fas fa-code"></i> Cron Expression</label>
+                        <input type="text" id="cronExpression" placeholder="Contoh: 0 2 * * *">
+                        <small style="color: #666;">Format: menit jam hari-bulan bulan hari-minggu</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-bell"></i> Notifikasi</label>
+                        <select id="notification">
+                            <option value="none">Tidak ada notifikasi</option>
+                            <option value="email">Email</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="both">Email & Telegram</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="active" checked> 
+                            <i class="fas fa-power-off"></i> Aktifkan jadwal
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Batal</button>
+                <button class="btn-save" onclick="saveSchedule()">Simpan Jadwal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        let schedules = [
+            {
+                id: 1,
+                name: 'Backup Database Harian',
+                description: 'Backup otomatis database setiap hari',
+                taskType: 'backup',
+                frequency: 'daily',
+                startDate: '2024-01-01T02:00',
+                endDate: '',
+                notification: 'email',
+                active: true,
+                status: 'active',
+                lastRun: '2024-01-15 02:00',
+                nextRun: '2024-01-16 02:00',
+                recurrence: 'Setiap hari jam 02:00'
+            },
+            {
+                id: 2,
+                name: 'Generate Report Mingguan',
+                description: 'Generate laporan penjualan mingguan',
+                taskType: 'report',
+                frequency: 'weekly',
+                startDate: '2024-01-01T08:00',
+                endDate: '',
+                notification: 'telegram',
+                active: true,
+                status: 'active',
+                lastRun: '2024-01-14 08:00',
+                nextRun: '2024-01-21 08:00',
+                recurrence: 'Setiap hari Senin jam 08:00'
+            },
+            {
+                id: 3,
+                name: 'Sinkronisasi Data',
+                description: 'Sinkronisasi data dengan server pusat',
+                taskType: 'sync',
+                frequency: 'hourly',
+                startDate: '2024-01-01T00:00',
+                endDate: '',
+                notification: 'both',
+                active: false,
+                status: 'inactive',
+                lastRun: '2024-01-15 13:00',
+                nextRun: '2024-01-15 14:00',
+                recurrence: 'Setiap jam'
+            },
+            {
+                id: 4,
+                name: 'Cleanup Temporary Files',
+                description: 'Bersihkan file temporary',
+                taskType: 'cleanup',
+                frequency: 'daily',
+                startDate: '2024-01-01T03:00',
+                endDate: '',
+                notification: 'none',
+                active: true,
+                status: 'pending',
+                lastRun: '2024-01-15 03:00',
+                nextRun: '2024-01-16 03:00',
+                recurrence: 'Setiap hari jam 03:00'
+            }
+        ];
+
+        let currentEditId = null;
+
+        // Load schedules on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            displaySchedules(schedules);
+        });
+
+        // Display schedules
+        function displaySchedules(schedulesToShow) {
+            const grid = document.getElementById('scheduleGrid');
+            grid.innerHTML = '';
+
+            if (schedulesToShow.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #666;"><i class="fas fa-calendar-times fa-3x"></i><p style="margin-top: 10px;">Tidak ada jadwal ditemukan</p></div>';
+                return;
+            }
+
+            schedulesToShow.forEach(schedule => {
+                const card = createScheduleCard(schedule);
+                grid.innerHTML += card;
+            });
+        }
+
+        // Create schedule card HTML
+        function createScheduleCard(schedule) {
+            const statusClass = schedule.status || (schedule.active ? 'active' : 'inactive');
+            const statusText = schedule.status ? 
+                (schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)) : 
+                (schedule.active ? 'Aktif' : 'Nonaktif');
+            
+            return `
+                <div class="schedule-card ${statusClass}" data-id="${schedule.id}">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <h3>${schedule.name}</h3>
+                            <span class="task-type">${getTaskTypeLabel(schedule.taskType)}</span>
+                        </div>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <p style="color: #666; margin-bottom: 15px;">${schedule.description}</p>
+                    <div class="schedule-info">
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Frekuensi: ${getFrequencyLabel(schedule.frequency)}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Terakhir: ${schedule.lastRun || 'Belum pernah'}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>Berikutnya: ${schedule.nextRun || 'Tidak terjadwal'}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-bell"></i>
+                            <span>Notifikasi: ${getNotificationLabel(schedule.notification)}</span>
+                        </div>
+                        <span class="recurrence-badge">
+                            <i class="fas fa-redo-alt"></i> ${schedule.recurrence}
+                        </span>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-action btn-edit" onclick="editSchedule(${schedule.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-action btn-toggle" onclick="toggleSchedule(${schedule.id})">
+                            <i class="fas fa-${schedule.active ? 'pause' : 'play'}"></i> 
+                            ${schedule.active ? 'Nonaktifkan' : 'Aktifkan'}
+                        </button>
+                        <button class="btn-action btn-delete" onclick="deleteSchedule(${schedule.id})">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper functions for labels
+        function getTaskTypeLabel(type) {
+            const labels = {
+                'backup': 'Backup',
+                'report': 'Report',
+                'sync': 'Sinkronisasi',
+                'cleanup': 'Cleanup',
+                'notification': 'Notifikasi'
+            };
+            return labels[type] || type;
+        }
+
+        function getFrequencyLabel(freq) {
+            const labels = {
+                'hourly': 'Setiap Jam',
+                'daily': 'Harian',
+                'weekly': 'Mingguan',
+                'monthly': 'Bulanan',
+                'custom': 'Kustom'
+            };
+            return labels[freq] || freq;
+        }
+
+        function getNotificationLabel(notif) {
+            const labels = {
+                'none': 'Tidak Ada',
+                'email': 'Email',
+                'telegram': 'Telegram',
+                'both': 'Email & Telegram'
+            };
+            return labels[notif] || notif;
+        }
+
+        // Filter functions
+        function filterSchedules() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = schedules.filter(schedule => {
+                // Status filter
+                if (statusFilter !== 'all') {
+                    const scheduleStatus = schedule.status || (schedule.active ? 'active' : 'inactive');
+                    if (scheduleStatus !== statusFilter) return false;
+                }
+
+                // Type filter
+                if (typeFilter !== 'all' && schedule.taskType !== typeFilter) return false;
+
+                // Search filter
+                if (searchTerm) {
+                    return schedule.name.toLowerCase().includes(searchTerm) ||
+                           schedule.description.toLowerCase().includes(searchTerm);
+                }
+
+                return true;
+            });
+
+            displaySchedules(filtered);
+        }
+
+        // Modal functions
+        function openAddModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Tambah Jadwal Baru';
+            document.getElementById('scheduleForm').reset();
+            document.getElementById('scheduleModal').classList.add('active');
+            document.getElementById('cronExpressionGroup').style.display = 'none';
+        }
+
+        function closeModal() {
+            document.getElementById('scheduleModal').classList.remove('active');
+        }
+
+        function editSchedule(id) {
+            const schedule = schedules.find(s => s.id === id);
+            if (schedule) {
+                currentEditId = id;
+                document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Jadwal';
+                
+                // Fill form
+                document.getElementById('scheduleName').value = schedule.name;
+                document.getElementById('scheduleDesc').value = schedule.description;
+                document.getElementById('taskType').value = schedule.taskType;
+                document.getElementById('frequency').value = schedule.frequency;
+                document.getElementById('startDate').value = schedule.startDate;
+                document.getElementById('endDate').value = schedule.endDate || '';
+                document.getElementById('notification').value = schedule.notification;
+                document.getElementById('active').checked = schedule.active;
+                
+                // Show/hide cron expression
+                if (schedule.frequency === 'custom') {
+                    document.getElementById('cronExpressionGroup').style.display = 'block';
+                    document.getElementById('cronExpression').value = schedule.cronExpression || '';
+                } else {
+                    document.getElementById('cronExpressionGroup').style.display = 'none';
+                }
+                
+                document.getElementById('scheduleModal').classList.add('active');
+            }
+        }
+
+        // Toggle frequency field
+        document.getElementById('frequency').addEventListener('change', function() {
+            if (this.value === 'custom') {
+                document.getElementById('cronExpressionGroup').style.display = 'block';
+            } else {
+                document.getElementById('cronExpressionGroup').style.display = 'none';
+            }
+        });
+
+        // Save schedule
+        function saveSchedule() {
+            // Get form values
+            const scheduleData = {
+                name: document.getElementById('scheduleName').value,
+                description: document.getElementById('scheduleDesc').value,
+                taskType: document.getElementById('taskType').value,
+                frequency: document.getElementById('frequency').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                notification: document.getElementById('notification').value,
+                active: document.getElementById('active').checked,
+                status: document.getElementById('active').checked ? 'active' : 'inactive'
+            };
+
+            // Validate required fields
+            if (!scheduleData.name || !scheduleData.taskType || !scheduleData.frequency || !scheduleData.startDate) {
+                alert('Harap isi semua field yang wajib diisi!');
+                return;
+            }
+
+            // Add cron expression if custom frequency
+            if (scheduleData.frequency === 'custom') {
+                scheduleData.cronExpression = document.getElementById('cronExpression').value;
+                if (!scheduleData.cronExpression) {
+                    alert('Harap isi cron expression!');
+                    return;
+                }
+            }
+
+            // Generate recurrence description
+            scheduleData.recurrence = generateRecurrenceText(scheduleData);
+
+            if (currentEditId) {
+                // Update existing schedule
+                const index = schedules.findIndex(s => s.id === currentEditId);
+                if (index !== -1) {
+                    schedules[index] = { ...schedules[index], ...scheduleData };
+                }
+            } else {
+                // Add new schedule
+                const newId = Math.max(...schedules.map(s => s.id), 0) + 1;
+                scheduleData.id = newId;
+                scheduleData.lastRun = '-';
+                scheduleData.nextRun = calculateNextRun(scheduleData);
+                schedules.push(scheduleData);
+            }
+
+            // Refresh display
+            displaySchedules(schedules);
+            closeModal();
+            filterSchedules(); // Apply current filters
+        }
+
+        // Generate recurrence text
+        function generateRecurrenceText(schedule) {
+            const date = new Date(schedule.startDate);
+            const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            
+            switch(schedule.frequency) {
+                case 'hourly':
+                    return `Setiap jam pada menit ${date.getMinutes()}`;
+                case 'daily':
+                    return `Setiap hari jam ${timeStr}`;
+                case 'weekly':
+                    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                    return `Setiap hari ${days[date.getDay()]} jam ${timeStr}`;
+                case 'monthly':
+                    return `Setiap tanggal ${date.getDate()} jam ${timeStr}`;
+                case 'custom':
+                    return `Kustom: ${schedule.cronExpression}`;
+                default:
+                    return 'Jadwal kustom';
+            }
+        }
+
+        // Calculate next run (simplified)
+        function calculateNextRun(schedule) {
+            // This is a simplified version - in real app, you'd use a proper cron parser
+            const now = new Date();
+            const start = new Date(schedule.startDate);
+            
+            if (start > now) {
+                return start.toLocaleString('id-ID');
+            }
+            
+            return 'Menunggu jadwal berikutnya';
+        }
+
+        // Toggle schedule active status
+        function toggleSchedule(id) {
+            const schedule = schedules.find(s => s.id === id);
+            if (schedule) {
+                schedule.active = !schedule.active;
+                schedule.status = schedule.active ? 'active' : 'inactive';
+                displaySchedules(schedules);
+                filterSchedules(); // Apply current filters
+            }
+        }
+
+        // Delete schedule
+        function deleteSchedule(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus jadwal ini?')) {
+                schedules = schedules.filter(s => s.id !== id);
+                displaySchedules(schedules);
+                filterSchedules(); // Apply current filters
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('scheduleModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
