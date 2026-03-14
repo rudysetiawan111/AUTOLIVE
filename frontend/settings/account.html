@@ -1,1 +1,2051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings - AUTOLIVE</title>
+    
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-bg: #1f2937;
+            --light-bg: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Layout */
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            position: sticky;
+            top: 0;
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sidebar-header p {
+            color: rgba(255,255,255,0.8);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s;
+            gap: 12px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            font-size: 20px;
+            width: 24px;
+        }
+
+        .menu-item:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background: #eef2ff;
+            color: var(--primary-color);
+            border-left-color: var(--primary-color);
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 16px 24px;
+        }
+
+        .menu-label {
+            padding: 8px 24px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 24px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title i {
+            font-size: 28px;
+            color: var(--primary-color);
+            background: #eef2ff;
+            padding: 8px;
+            border-radius: 10px;
+        }
+
+        .page-title h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .page-title .breadcrumb {
+            margin: 4px 0 0;
+            background: none;
+            padding: 0;
+            font-size: 13px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-badge {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-badge i {
+            font-size: 20px;
+            color: var(--text-secondary);
+        }
+
+        .notification-badge .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 10px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .user-profile:hover {
+            background: var(--light-bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .user-info {
+            line-height: 1.3;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Settings Container */
+        .settings-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .settings-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--light-bg);
+        }
+
+        .settings-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 4px;
+        }
+
+        .settings-header p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .settings-nav {
+            display: flex;
+            gap: 4px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: white;
+        }
+
+        .settings-nav-item {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .settings-nav-item:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .settings-nav-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .settings-content {
+            padding: 24px;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-avatar-section {
+            text-align: center;
+        }
+
+        .profile-avatar-large {
+            width: 150px;
+            height: 150px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .profile-avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            color: white;
+            font-size: 20px;
+        }
+
+        .profile-avatar-large:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .avatar-initials {
+            font-size: 48px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .avatar-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .avatar-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .avatar-btn:hover {
+            background: var(--light-bg);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .profile-form-section {
+            flex: 1;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+
+        .form-control:disabled {
+            background: var(--light-bg);
+            cursor: not-allowed;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-group .form-control {
+            flex: 1;
+        }
+
+        .input-group .btn {
+            padding: 10px 16px;
+        }
+
+        /* Security Section */
+        .security-section {
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: var(--primary-color);
+        }
+
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-meter {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .strength-segment {
+            height: 4px;
+            flex: 1;
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .strength-segment.active {
+            background: var(--secondary-color);
+        }
+
+        .strength-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Two Factor Section */
+        .two-factor-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--light-bg);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .two-factor-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 4px;
+        }
+
+        .two-factor-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .two-factor-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .status-inactive {
+            background: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        /* Switch Toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Connected Accounts */
+        .account-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--light-bg);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .account-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .account-icon.youtube {
+            background: #ff0000;
+            color: white;
+        }
+
+        .account-icon.tiktok {
+            background: #000000;
+            color: white;
+        }
+
+        .account-icon.google {
+            background: #4285f4;
+            color: white;
+        }
+
+        .account-info {
+            flex: 1;
+        }
+
+        .account-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .account-email {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .account-status {
+            font-size: 11px;
+            color: var(--secondary-color);
+        }
+
+        /* Sessions */
+        .session-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--light-bg);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .session-device {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .session-info {
+            flex: 1;
+        }
+
+        .session-device-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .session-location {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .session-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .current-badge {
+            background: var(--secondary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+
+        /* Notifications */
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--light-bg);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .notification-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 4px;
+        }
+
+        .notification-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Danger Zone */
+        .danger-zone {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        .danger-zone h3 {
+            color: var(--danger-color);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .danger-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #fee2e2;
+        }
+
+        .danger-item:last-child {
+            border-bottom: none;
+        }
+
+        .danger-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 4px;
+            color: var(--text-primary);
+        }
+
+        .danger-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border-color);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            border-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            background: var(--light-bg);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 16px;
+            border: none;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border-radius: 16px 16px 0 0;
+            padding: 20px 24px;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 8px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .profile-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar Component -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>AUTOLIVE</h2>
+                <p>Account Settings</p>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-label">MAIN</div>
+                <a href="/dashboard/home.html" class="menu-item">
+                    <i class="bi bi-house-door"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/viral-discovery/index.html" class="menu-item">
+                    <i class="bi bi-graph-up"></i>
+                    <span>Viral Discovery</span>
+                </a>
+                <a href="/channel-manager/index.html" class="menu-item">
+                    <i class="bi bi-youtube"></i>
+                    <span>Channel Manager</span>
+                </a>
+                
+                <div class="menu-divider"></div>
+                
+                <div class="menu-label">AUTOMATION</div>
+                <a href="/automation/scheduler.html" class="menu-item">
+                    <i class="bi bi-calendar"></i>
+                    <span>Scheduler</span>
+                </a>
+                <a href="/automation/queue.html" class="menu-item">
+                    <i class="bi bi-list-task"></i>
+                    <span>Queue</span>
+                </a>
+                <a href="/workflow-builder/index.html" class="menu-item">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Workflow Builder</span>
+                </a>
+                <a href="/automation-app-builder/index.html" class="menu-item">
+                    <i class="bi bi-bricks"></i>
+                    <span>App Builder</span>
+                </a>
+                
+                <div class="menu-divider"></div>
+                
+                <div class="menu-label">REPORTS</div>
+                <a href="/reports/uploads.html" class="menu-item">
+                    <i class="bi bi-cloud-upload"></i>
+                    <span>Upload Reports</span>
+                </a>
+                <a href="/dashboard/analytics.html" class="menu-item">
+                    <i class="bi bi-pie-chart"></i>
+                    <span>Analytics</span>
+                </a>
+                
+                <div class="menu-divider"></div>
+                
+                <div class="menu-label">SETTINGS</div>
+                <a href="/settings/account.html" class="menu-item active">
+                    <i class="bi bi-gear"></i>
+                    <span>Account</span>
+                </a>
+                <a href="/settings/admin.html" class="menu-item">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Admin</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="page-title">
+                    <i class="bi bi-gear"></i>
+                    <div>
+                        <h1>Account Settings</h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/dashboard/home.html">Dashboard</a></li>
+                                <li class="breadcrumb-item">Settings</li>
+                                <li class="breadcrumb-item active">Account</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+                
+                <div class="user-menu">
+                    <div class="notification-badge">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-profile" onclick="toggleUserMenu()">
+                        <div class="user-avatar" id="headerAvatar">JD</div>
+                        <div class="user-info">
+                            <div class="user-name" id="headerName">John Doe</div>
+                            <div class="user-role">Pro User</div>
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Container -->
+            <div class="settings-container">
+                <div class="settings-header">
+                    <h2>Account Settings</h2>
+                    <p>Manage your account settings and preferences</p>
+                </div>
+
+                <div class="settings-nav">
+                    <div class="settings-nav-item active" onclick="switchSettingsTab('profile')">Profile</div>
+                    <div class="settings-nav-item" onclick="switchSettingsTab('security')">Security</div>
+                    <div class="settings-nav-item" onclick="switchSettingsTab('notifications')">Notifications</div>
+                    <div class="settings-nav-item" onclick="switchSettingsTab('accounts')">Connected Accounts</div>
+                    <div class="settings-nav-item" onclick="switchSettingsTab('sessions')">Active Sessions</div>
+                    <div class="settings-nav-item" onclick="switchSettingsTab('billing')">Billing</div>
+                    <div class="settings-nav-item" onclick="switchSettingsTab('danger')">Danger Zone</div>
+                </div>
+
+                <div class="settings-content">
+                    <!-- Profile Tab -->
+                    <div id="profileTab" style="display: block;">
+                        <div class="profile-section">
+                            <div class="profile-avatar-section">
+                                <div class="profile-avatar-large" onclick="document.getElementById('avatarInput').click()">
+                                    <div class="avatar-initials" id="avatarInitials">JD</div>
+                                    <div class="avatar-overlay">
+                                        <i class="bi bi-camera"></i>
+                                    </div>
+                                    <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(this)">
+                                </div>
+                                <div class="avatar-actions">
+                                    <button class="avatar-btn" onclick="document.getElementById('avatarInput').click()">
+                                        <i class="bi bi-upload"></i> Upload
+                                    </button>
+                                    <button class="avatar-btn" onclick="removeAvatar()">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="profile-form-section">
+                                <form id="profileForm">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">First Name</label>
+                                            <input type="text" class="form-control" id="firstName" value="John">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Last Name</label>
+                                            <input type="text" class="form-control" id="lastName" value="Doe">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Display Name</label>
+                                        <input type="text" class="form-control" id="displayName" value="John Doe">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Email Address</label>
+                                        <div class="input-group">
+                                            <input type="email" class="form-control" id="email" value="john.doe@example.com" disabled>
+                                            <button type="button" class="btn btn-outline" onclick="verifyEmail()">
+                                                <i class="bi bi-check-circle"></i> Verified
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Phone Number</label>
+                                        <div class="input-group">
+                                            <input type="tel" class="form-control" id="phone" value="+1 234 567 8900">
+                                            <button type="button" class="btn btn-outline" onclick="verifyPhone()">
+                                                <i class="bi bi-shield-check"></i> Verify
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Bio</label>
+                                        <textarea class="form-control" id="bio" rows="3">Content creator and automation enthusiast. Managing multiple YouTube and TikTok channels.</textarea>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Location</label>
+                                            <input type="text" class="form-control" id="location" value="New York, USA">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Timezone</label>
+                                            <select class="form-control" id="timezone">
+                                                <option value="EST" selected>Eastern Time (EST)</option>
+                                                <option value="PST">Pacific Time (PST)</option>
+                                                <option value="GMT">Greenwich Mean Time (GMT)</option>
+                                                <option value="CET">Central European Time (CET)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Language</label>
+                                        <select class="form-control" id="language">
+                                            <option value="en" selected>English</option>
+                                            <option value="es">Spanish</option>
+                                            <option value="fr">French</option>
+                                            <option value="de">German</option>
+                                            <option value="id">Indonesian</option>
+                                        </select>
+                                    </div>
+
+                                    <button type="button" class="btn btn-primary" onclick="saveProfile()">
+                                        <i class="bi bi-check-lg"></i> Save Changes
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div id="securityTab" style="display: none;">
+                        <div class="security-section">
+                            <div class="section-title">
+                                <i class="bi bi-shield-lock"></i>
+                                <span>Password & Authentication</span>
+                            </div>
+
+                            <form id="passwordForm">
+                                <div class="form-group">
+                                    <label class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="currentPassword">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="newPassword" onkeyup="checkPasswordStrength()">
+                                    <div class="password-strength">
+                                        <div class="strength-meter">
+                                            <div class="strength-segment" id="strength1"></div>
+                                            <div class="strength-segment" id="strength2"></div>
+                                            <div class="strength-segment" id="strength3"></div>
+                                            <div class="strength-segment" id="strength4"></div>
+                                        </div>
+                                        <span class="strength-text" id="strengthText">Weak password</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirmPassword">
+                                </div>
+
+                                <button type="button" class="btn btn-primary" onclick="changePassword()">
+                                    <i class="bi bi-key"></i> Update Password
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="security-section">
+                            <div class="section-title">
+                                <i class="bi bi-phone"></i>
+                                <span>Two-Factor Authentication (2FA)</span>
+                            </div>
+
+                            <div class="two-factor-item">
+                                <div class="two-factor-info">
+                                    <h4>Authenticator App</h4>
+                                    <p>Use an authenticator app to get verification codes</p>
+                                </div>
+                                <div class="two-factor-status">
+                                    <span class="status-badge status-inactive">Disabled</span>
+                                    <button class="btn btn-sm btn-primary" onclick="enable2FA()">
+                                        <i class="bi bi-shield-plus"></i> Enable
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="two-factor-item">
+                                <div class="two-factor-info">
+                                    <h4>SMS Authentication</h4>
+                                    <p>Receive verification codes via SMS</p>
+                                </div>
+                                <div class="two-factor-status">
+                                    <span class="status-badge status-inactive">Disabled</span>
+                                    <button class="btn btn-sm btn-primary" onclick="enableSMS2FA()">
+                                        <i class="bi bi-chat"></i> Enable
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="security-section">
+                            <div class="section-title">
+                                <i class="bi bi-clock-history"></i>
+                                <span>Recent Activity</span>
+                            </div>
+
+                            <div class="session-item">
+                                <div class="session-device">
+                                    <i class="bi bi-laptop"></i>
+                                </div>
+                                <div class="session-info">
+                                    <div class="session-device-name">
+                                        Windows PC - Chrome
+                                        <span class="current-badge">Current</span>
+                                    </div>
+                                    <div class="session-location">New York, USA</div>
+                                    <div class="session-time">Active now</div>
+                                </div>
+                            </div>
+
+                            <div class="session-item">
+                                <div class="session-device">
+                                    <i class="bi bi-phone"></i>
+                                </div>
+                                <div class="session-info">
+                                    <div class="session-device-name">iPhone 14 Pro</div>
+                                    <div class="session-location">New York, USA</div>
+                                    <div class="session-time">Last active 2 hours ago</div>
+                                </div>
+                                <button class="btn btn-sm btn-outline" onclick="revokeSession(1)">
+                                    <i class="bi bi-x-circle"></i> Revoke
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications Tab -->
+                    <div id="notificationsTab" style="display: none;">
+                        <div class="section-title">
+                            <i class="bi bi-bell"></i>
+                            <span>Notification Preferences</span>
+                        </div>
+
+                        <div class="notification-item">
+                            <div class="notification-info">
+                                <h4>Upload Complete</h4>
+                                <p>Get notified when a video upload is complete</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked id="notifUpload">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-item">
+                            <div class="notification-info">
+                                <h4>Upload Failed</h4>
+                                <p>Get notified when a video upload fails</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked id="notifFailed">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-item">
+                            <div class="notification-info">
+                                <h4>New Comment</h4>
+                                <p>Get notified when someone comments on your videos</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked id="notifComment">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-item">
+                            <div class="notification-info">
+                                <h4>New Subscriber</h4>
+                                <p>Get notified when you gain a new subscriber</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="notifSubscriber">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-item">
+                            <div class="notification-info">
+                                <h4>Weekly Report</h4>
+                                <p>Receive weekly performance reports via email</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked id="notifReport">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="notification-item">
+                            <div class="notification-info">
+                                <h4>System Updates</h4>
+                                <p>Get notified about system maintenance and updates</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked id="notifSystem">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveNotifications()">
+                            <i class="bi bi-check-lg"></i> Save Preferences
+                        </button>
+                    </div>
+
+                    <!-- Connected Accounts Tab -->
+                    <div id="accountsTab" style="display: none;">
+                        <div class="section-title">
+                            <i class="bi bi-link-45deg"></i>
+                            <span>Connected Social Accounts</span>
+                        </div>
+
+                        <div class="account-item">
+                            <div class="account-icon youtube">
+                                <i class="bi bi-youtube"></i>
+                            </div>
+                            <div class="account-info">
+                                <div class="account-name">Main YouTube Channel</div>
+                                <div class="account-email">youtube@example.com</div>
+                                <div class="account-status">● Connected</div>
+                            </div>
+                            <div>
+                                <span class="status-badge status-active">Active</span>
+                                <button class="btn btn-sm btn-outline" onclick="manageAccount('youtube')">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="account-item">
+                            <div class="account-icon tiktok">
+                                <i class="bi bi-tiktok"></i>
+                            </div>
+                            <div class="account-info">
+                                <div class="account-name">TikTok Creator</div>
+                                <div class="account-email">@creator</div>
+                                <div class="account-status">● Connected</div>
+                            </div>
+                            <div>
+                                <span class="status-badge status-active">Active</span>
+                                <button class="btn btn-sm btn-outline" onclick="manageAccount('tiktok')">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="account-item">
+                            <div class="account-icon google">
+                                <i class="bi bi-google"></i>
+                            </div>
+                            <div class="account-info">
+                                <div class="account-name">Google Account</div>
+                                <div class="account-email">john.doe@gmail.com</div>
+                                <div class="account-status">● Connected</div>
+                            </div>
+                            <div>
+                                <span class="status-badge status-active">Active</span>
+                                <button class="btn btn-sm btn-outline" onclick="manageAccount('google')">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="connectNewAccount()">
+                            <i class="bi bi-plus-circle"></i> Connect New Account
+                        </button>
+                    </div>
+
+                    <!-- Sessions Tab -->
+                    <div id="sessionsTab" style="display: none;">
+                        <div class="section-title">
+                            <i class="bi bi-devices"></i>
+                            <span>Active Sessions</span>
+                        </div>
+
+                        <div class="session-item">
+                            <div class="session-device">
+                                <i class="bi bi-laptop"></i>
+                            </div>
+                            <div class="session-info">
+                                <div class="session-device-name">
+                                    Windows PC - Chrome
+                                    <span class="current-badge">Current</span>
+                                </div>
+                                <div class="session-location">New York, USA · 192.168.1.100</div>
+                                <div class="session-time">Active now</div>
+                            </div>
+                        </div>
+
+                        <div class="session-item">
+                            <div class="session-device">
+                                <i class="bi bi-phone"></i>
+                            </div>
+                            <div class="session-info">
+                                <div class="session-device-name">iPhone 14 Pro - Safari</div>
+                                <div class="session-location">New York, USA · 192.168.1.101</div>
+                                <div class="session-time">Last active 2 hours ago</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="revokeSession(2)">
+                                <i class="bi bi-x-circle"></i> Revoke
+                            </button>
+                        </div>
+
+                        <div class="session-item">
+                            <div class="session-device">
+                                <i class="bi bi-tablet"></i>
+                            </div>
+                            <div class="session-info">
+                                <div class="session-device-name">iPad Pro - Safari</div>
+                                <div class="session-location">Los Angeles, USA · 192.168.1.102</div>
+                                <div class="session-time">Last active 1 day ago</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="revokeSession(3)">
+                                <i class="bi bi-x-circle"></i> Revoke
+                            </button>
+                        </div>
+
+                        <button class="btn btn-outline" onclick="revokeAllSessions()">
+                            <i class="bi bi-power"></i> Sign Out All Devices
+                        </button>
+                    </div>
+
+                    <!-- Billing Tab -->
+                    <div id="billingTab" style="display: none;">
+                        <div class="section-title">
+                            <i class="bi bi-credit-card"></i>
+                            <span>Current Plan</span>
+                        </div>
+
+                        <div class="account-item" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white;">
+                            <div style="flex: 1;">
+                                <h4 style="color: white; margin-bottom: 4px;">Pro Plan</h4>
+                                <p style="color: rgba(255,255,255,0.9); margin: 0;">$29.99/month · Next billing on Apr 14, 2025</p>
+                            </div>
+                            <span class="status-badge" style="background: white; color: var(--primary-color);">Active</span>
+                        </div>
+
+                        <div style="margin: 24px 0;">
+                            <h4 style="font-size: 14px; margin-bottom: 16px;">Plan Features</h4>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                                <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> 10 YouTube Channels</div>
+                                <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> 5 TikTok Accounts</div>
+                                <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> Unlimited Uploads</div>
+                                <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> Advanced Analytics</div>
+                                <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> AI Content Generation</div>
+                                <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> Priority Support</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-primary" onclick="upgradePlan()">
+                                <i class="bi bi-arrow-up"></i> Upgrade Plan
+                            </button>
+                            <button class="btn btn-outline" onclick="manageBilling()">
+                                <i class="bi bi-credit-card"></i> Manage Billing
+                            </button>
+                            <button class="btn btn-outline" onclick="viewInvoices()">
+                                <i class="bi bi-file-text"></i> View Invoices
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone Tab -->
+                    <div id="dangerTab" style="display: none;">
+                        <div class="danger-zone">
+                            <h3><i class="bi bi-exclamation-triangle"></i> Danger Zone</h3>
+                            
+                            <div class="danger-item">
+                                <div class="danger-info">
+                                    <h4>Download Personal Data</h4>
+                                    <p>Get a copy of all your data including settings, channels, and upload history</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="downloadData()">
+                                    <i class="bi bi-download"></i> Download
+                                </button>
+                            </div>
+
+                            <div class="danger-item">
+                                <div class="danger-info">
+                                    <h4>Deactivate Account</h4>
+                                    <p>Temporarily disable your account. You can reactivate anytime</p>
+                                </div>
+                                <button class="btn btn-outline" onclick="deactivateAccount()">
+                                    <i class="bi bi-pause-circle"></i> Deactivate
+                                </button>
+                            </div>
+
+                            <div class="danger-item">
+                                <div class="danger-info">
+                                    <h4>Delete Account</h4>
+                                    <p>Permanently delete your account and all associated data</p>
+                                </div>
+                                <button class="btn btn-danger" onclick="deleteAccount()">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Email Modal -->
+    <div class="modal fade" id="changeEmailModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Change Email Address</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">New Email Address</label>
+                        <input type="email" class="form-control" id="newEmail">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPasswordEmail">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateEmail()">Update Email</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2FA Setup Modal -->
+    <div class="modal fade" id="twoFAModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Setup Two-Factor Authentication</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="background: var(--light-bg); padding: 20px; border-radius: 8px; display: inline-block;">
+                            <i class="bi bi-qr-code" style="font-size: 64px;"></i>
+                        </div>
+                    </div>
+                    <p style="text-align: center; margin-bottom: 20px;">Scan this QR code with your authenticator app</p>
+                    <div class="form-group">
+                        <label class="form-label">Verification Code</label>
+                        <input type="text" class="form-control" placeholder="Enter 6-digit code">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="verify2FA()">Verify & Enable</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: var(--danger-color);">
+                    <h5 class="modal-title">Delete Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        This action cannot be undone. All your data will be permanently deleted.
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Type "DELETE" to confirm</label>
+                        <input type="text" class="form-control" id="deleteConfirm">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="deletePassword">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">Permanently Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+    <script>
+        // Account Settings Manager Class
+        class AccountSettingsManager {
+            constructor() {
+                this.apiBaseUrl = '/api/v1';
+                this.user = null;
+                this.cropper = null;
+                
+                this.init();
+            }
+
+            async init() {
+                await this.loadUserData();
+                this.setupEventListeners();
+            }
+
+            async loadUserData() {
+                try {
+                    // Simulate API call - replace with actual API
+                    await this.simulateApiCall();
+                    
+                    // Update UI with user data
+                    this.updateUserUI();
+                    
+                } catch (error) {
+                    this.showToast('Error loading user data', 'error');
+                    console.error('Load error:', error);
+                }
+            }
+
+            simulateApiCall() {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        this.user = {
+                            firstName: 'John',
+                            lastName: 'Doe',
+                            displayName: 'John Doe',
+                            email: 'john.doe@example.com',
+                            phone: '+1 234 567 8900',
+                            bio: 'Content creator and automation enthusiast. Managing multiple YouTube and TikTok channels.',
+                            location: 'New York, USA',
+                            timezone: 'EST',
+                            language: 'en',
+                            avatar: null,
+                            emailVerified: true,
+                            phoneVerified: false,
+                            twoFAEnabled: false,
+                            plan: 'pro',
+                            planExpiry: '2025-04-14'
+                        };
+                        resolve();
+                    }, 500);
+                });
+            }
+
+            updateUserUI() {
+                if (!this.user) return;
+
+                // Update form fields
+                document.getElementById('firstName').value = this.user.firstName;
+                document.getElementById('lastName').value = this.user.lastName;
+                document.getElementById('displayName').value = this.user.displayName;
+                document.getElementById('email').value = this.user.email;
+                document.getElementById('phone').value = this.user.phone;
+                document.getElementById('bio').value = this.user.bio;
+                document.getElementById('location').value = this.user.location;
+                document.getElementById('timezone').value = this.user.timezone;
+                document.getElementById('language').value = this.user.language;
+
+                // Update avatar
+                const initials = this.user.firstName.charAt(0) + this.user.lastName.charAt(0);
+                document.getElementById('avatarInitials').textContent = initials;
+                document.getElementById('headerAvatar').textContent = initials;
+                document.getElementById('headerName').textContent = this.user.displayName;
+
+                // Update verification badges
+                if (this.user.emailVerified) {
+                    // Email verified
+                }
+            }
+
+            setupEventListeners() {
+                // Avatar upload preview
+                document.getElementById('avatarInput').addEventListener('change', (e) => {
+                    this.previewAvatar(e.target.files[0]);
+                });
+            }
+
+            previewAvatar(file) {
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const avatarContainer = document.querySelector('.profile-avatar-large');
+                    avatarContainer.innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
+                    
+                    // Initialize cropper if needed
+                    if (this.cropper) {
+                        this.cropper.destroy();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+
+            handleAvatarUpload(input) {
+                const file = input.files[0];
+                if (!file) return;
+
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    this.showToast('Please select an image file', 'error');
+                    return;
+                }
+
+                // Validate file size (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    this.showToast('Image size should be less than 2MB', 'error');
+                    return;
+                }
+
+                this.previewAvatar(file);
+                this.showToast('Avatar uploaded successfully', 'success');
+            }
+
+            removeAvatar() {
+                const avatarContainer = document.querySelector('.profile-avatar-large');
+                const initials = this.user.firstName.charAt(0) + this.user.lastName.charAt(0);
+                avatarContainer.innerHTML = `<div class="avatar-initials">${initials}</div>`;
+                
+                this.showToast('Avatar removed', 'info');
+            }
+
+            saveProfile() {
+                const profileData = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    displayName: document.getElementById('displayName').value,
+                    phone: document.getElementById('phone').value,
+                    bio: document.getElementById('bio').value,
+                    location: document.getElementById('location').value,
+                    timezone: document.getElementById('timezone').value,
+                    language: document.getElementById('language').value
+                };
+
+                // Validate required fields
+                if (!profileData.firstName || !profileData.lastName) {
+                    this.showToast('First name and last name are required', 'error');
+                    return;
+                }
+
+                // Simulate API call
+                setTimeout(() => {
+                    Object.assign(this.user, profileData);
+                    this.updateUserUI();
+                    this.showToast('Profile updated successfully', 'success');
+                }, 500);
+            }
+
+            checkPasswordStrength() {
+                const password = document.getElementById('newPassword').value;
+                const segments = document.querySelectorAll('.strength-segment');
+                const strengthText = document.getElementById('strengthText');
+
+                let strength = 0;
+                
+                // Length check
+                if (password.length >= 8) strength++;
+                if (password.length >= 12) strength++;
+                
+                // Complexity checks
+                if (/[A-Z]/.test(password)) strength++;
+                if (/[0-9]/.test(password)) strength++;
+                if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+                // Update UI
+                segments.forEach((seg, index) => {
+                    seg.classList.toggle('active', index < strength);
+                });
+
+                const strengthLevels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+                strengthText.textContent = strengthLevels[Math.min(strength, 4)];
+            }
+
+            changePassword() {
+                const current = document.getElementById('currentPassword').value;
+                const newPass = document.getElementById('newPassword').value;
+                const confirm = document.getElementById('confirmPassword').value;
+
+                if (!current || !newPass || !confirm) {
+                    this.showToast('All fields are required', 'error');
+                    return;
+                }
+
+                if (newPass !== confirm) {
+                    this.showToast('New passwords do not match', 'error');
+                    return;
+                }
+
+                if (newPass.length < 8) {
+                    this.showToast('Password must be at least 8 characters', 'error');
+                    return;
+                }
+
+                // Simulate API call
+                setTimeout(() => {
+                    this.showToast('Password changed successfully', 'success');
+                    document.getElementById('passwordForm').reset();
+                }, 1000);
+            }
+
+            enable2FA() {
+                new bootstrap.Modal(document.getElementById('twoFAModal')).show();
+            }
+
+            enableSMS2FA() {
+                if (!this.user.phoneVerified) {
+                    this.showToast('Please verify your phone number first', 'warning');
+                    return;
+                }
+                this.showToast('SMS 2FA enabled', 'success');
+            }
+
+            verify2FA() {
+                // Simulate verification
+                setTimeout(() => {
+                    this.user.twoFAEnabled = true;
+                    this.showToast('Two-factor authentication enabled', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('twoFAModal')).hide();
+                }, 1000);
+            }
+
+            verifyEmail() {
+                new bootstrap.Modal(document.getElementById('changeEmailModal')).show();
+            }
+
+            updateEmail() {
+                const newEmail = document.getElementById('newEmail').value;
+                const password = document.getElementById('confirmPasswordEmail').value;
+
+                if (!newEmail || !password) {
+                    this.showToast('All fields are required', 'error');
+                    return;
+                }
+
+                // Simulate API call
+                setTimeout(() => {
+                    this.user.email = newEmail;
+                    this.user.emailVerified = false;
+                    document.getElementById('email').value = newEmail;
+                    this.showToast('Verification email sent', 'info');
+                    bootstrap.Modal.getInstance(document.getElementById('changeEmailModal')).hide();
+                }, 1000);
+            }
+
+            verifyPhone() {
+                this.showToast('Verification code sent to your phone', 'info');
+                // Show verification modal
+            }
+
+            saveNotifications() {
+                const preferences = {
+                    upload: document.getElementById('notifUpload').checked,
+                    failed: document.getElementById('notifFailed').checked,
+                    comment: document.getElementById('notifComment').checked,
+                    subscriber: document.getElementById('notifSubscriber').checked,
+                    report: document.getElementById('notifReport').checked,
+                    system: document.getElementById('notifSystem').checked
+                };
+
+                // Simulate save
+                setTimeout(() => {
+                    this.showToast('Notification preferences saved', 'success');
+                }, 500);
+            }
+
+            manageAccount(platform) {
+                this.showToast(`Managing ${platform} account`, 'info');
+            }
+
+            connectNewAccount() {
+                this.showToast('Connect new account feature coming soon', 'info');
+            }
+
+            revokeSession(sessionId) {
+                if (confirm('Revoke this session? The device will be signed out.')) {
+                    this.showToast('Session revoked', 'success');
+                }
+            }
+
+            revokeAllSessions() {
+                if (confirm('Sign out all other devices? You will remain signed in on this device.')) {
+                    this.showToast('All other sessions revoked', 'success');
+                }
+            }
+
+            upgradePlan() {
+                this.showToast('Upgrade plan feature coming soon', 'info');
+            }
+
+            manageBilling() {
+                this.showToast('Billing management coming soon', 'info');
+            }
+
+            viewInvoices() {
+                this.showToast('Invoices feature coming soon', 'info');
+            }
+
+            downloadData() {
+                const data = {
+                    user: this.user,
+                    timestamp: new Date().toISOString()
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `user_data_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+
+                this.showToast('Data download started', 'success');
+            }
+
+            deactivateAccount() {
+                if (confirm('Deactivate your account? You can reactivate anytime by logging in.')) {
+                    this.showToast('Account deactivated', 'warning');
+                    setTimeout(() => {
+                        window.location.href = '/auth/login.html';
+                    }, 2000);
+                }
+            }
+
+            deleteAccount() {
+                new bootstrap.Modal(document.getElementById('deleteAccountModal')).show();
+            }
+
+            confirmDelete() {
+                const confirm = document.getElementById('deleteConfirm').value;
+                const password = document.getElementById('deletePassword').value;
+
+                if (confirm !== 'DELETE') {
+                    this.showToast('Please type DELETE to confirm', 'error');
+                    return;
+                }
+
+                if (!password) {
+                    this.showToast('Password is required', 'error');
+                    return;
+                }
+
+                // Simulate API call
+                setTimeout(() => {
+                    this.showToast('Account permanently deleted', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/auth/login.html';
+                    }, 2000);
+                }, 1000);
+            }
+
+            switchSettingsTab(tab) {
+                // Update nav items
+                document.querySelectorAll('.settings-nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                event.currentTarget.classList.add('active');
+
+                // Hide all tabs
+                document.getElementById('profileTab').style.display = 'none';
+                document.getElementById('securityTab').style.display = 'none';
+                document.getElementById('notificationsTab').style.display = 'none';
+                document.getElementById('accountsTab').style.display = 'none';
+                document.getElementById('sessionsTab').style.display = 'none';
+                document.getElementById('billingTab').style.display = 'none';
+                document.getElementById('dangerTab').style.display = 'none';
+
+                // Show selected tab
+                document.getElementById(tab + 'Tab').style.display = 'block';
+            }
+
+            toggleUserMenu() {
+                // Implement user dropdown menu
+            }
+
+            showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="bi bi-${type === 'success' ? 'check-circle' : 
+                                     type === 'error' ? 'exclamation-circle' :
+                                     type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                `;
+                
+                container.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        }
+
+        // Initialize
+        let manager;
+        document.addEventListener('DOMContentLoaded', () => {
+            manager = new AccountSettingsManager();
+        });
+
+        // Global functions
+        function switchSettingsTab(tab) { manager.switchSettingsTab(tab); }
+        function toggleUserMenu() { manager.toggleUserMenu(); }
+        function handleAvatarUpload(input) { manager.handleAvatarUpload(input); }
+        function removeAvatar() { manager.removeAvatar(); }
+        function saveProfile() { manager.saveProfile(); }
+        function checkPasswordStrength() { manager.checkPasswordStrength(); }
+        function changePassword() { manager.changePassword(); }
+        function enable2FA() { manager.enable2FA(); }
+        function enableSMS2FA() { manager.enableSMS2FA(); }
+        function verify2FA() { manager.verify2FA(); }
+        function verifyEmail() { manager.verifyEmail(); }
+        function verifyPhone() { manager.verifyPhone(); }
+        function updateEmail() { manager.updateEmail(); }
+        function saveNotifications() { manager.saveNotifications(); }
+        function manageAccount(platform) { manager.manageAccount(platform); }
+        function connectNewAccount() { manager.connectNewAccount(); }
+        function revokeSession(sessionId) { manager.revokeSession(sessionId); }
+        function revokeAllSessions() { manager.revokeAllSessions(); }
+        function upgradePlan() { manager.upgradePlan(); }
+        function manageBilling() { manager.manageBilling(); }
+        function viewInvoices() { manager.viewInvoices(); }
+        function downloadData() { manager.downloadData(); }
+        function deactivateAccount() { manager.deactivateAccount(); }
+        function deleteAccount() { manager.deleteAccount(); }
+        function confirmDelete() { manager.confirmDelete(); }
+    </script>
+</body>
+</html>
