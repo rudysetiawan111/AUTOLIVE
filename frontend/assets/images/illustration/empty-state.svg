@@ -1,0 +1,27 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="emptyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#667eea" stop-opacity="0.1"/>
+            <stop offset="100%" stop-color="#764ba2" stop-opacity="0.1"/>
+        </linearGradient>
+    </defs>
+    
+    <!-- Background Circle -->
+    <circle cx="100" cy="100" r="80" fill="url(#emptyGradient)"/>
+    
+    <!-- Empty Box -->
+    <rect x="60" y="70" width="80" height="60" rx="10" fill="white" stroke="#667eea" stroke-width="2" stroke-dasharray="5 5"/>
+    
+    <!-- Question Mark -->
+    <text x="100" y="115" font-family="Arial" font-size="40" fill="#667eea" text-anchor="middle">?</text>
+    
+    <!-- Stars -->
+    <circle cx="140" cy="50" r="5" fill="#f6ad55"/>
+    <circle cx="50" cy="140" r="5" fill="#f687b3"/>
+    <circle cx="160" cy="150" r="3" fill="#68d391"/>
+    
+    <!-- Text -->
+    <text x="100" y="160" font-family="Arial" font-size="14" fill="#718096" text-anchor="middle">
+        No Data Available
+    </text>
+</svg>
