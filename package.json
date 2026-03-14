@@ -1,0 +1,22 @@
+{
+  "name": "autolive",
+  "version": "1.0.0",
+  "description": "AUTOLIVE - Automated Video Management System",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "frontend": "cd frontend && npx live-server --port=3000",
+    "dev:full": "concurrently \"npm run dev\" \"npm run frontend\"",
+    "install:all": "npm install && cd backend && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["youtube", "tiktok", "automation", "video", "ai"],
+  "author": "AUTOLIVE",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "live-server": "^1.2.2",
+    "nodemon": "^3.0.1"
+  }
+}
