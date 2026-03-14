@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Marga Jaya Bird Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 0;
+        }
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .nav-link:hover {
+            color: white !important;
+        }
+        .main-content {
+            padding: 30px;
+        }
+        .platform-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .platform-card:hover {
+            transform: translateY(-5px);
+        }
+        .platform-card.connected {
+            border-left: 4px solid #28a745;
+        }
+        .platform-card.disconnected {
+            border-left: 4px solid #dc3545;
+        }
+        .connect-btn {
+            border-radius: 20px;
+            padding: 8px 25px;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-dove me-2"></i>Marga Jaya Bird Shop
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <!-- Welcome Section -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h3>Selamat Datang, <span id="userName">User</span>!</h3>
+                <p class="text-muted">Kelola koneksi platform Anda untuk mengakses konten eksklusif</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="user-avatar ms-auto" id="userAvatar">U</div>
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer" class="mb-4"></div>
+
+        <!-- Platform Cards -->
+        <div class="row">
+            <!-- YouTube Card -->
+            <div class="col-md-6">
+                <div class="platform-card" id="youtubeCard">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fab fa-youtube fa-3x text-danger me-3"></i>
+                        <div>
+                            <h5 class="mb-1">YouTube</h5>
+                            <span class="status-badge" id="youtubeStatusBadge">Memeriksa...</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-muted small mb-3">
+                        Hubungkan akun YouTube Anda untuk mengakses video eksklusif, live streaming, dan konten premium lainnya.
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" id="youtubeChannelName"></small>
+                        <button class="btn connect-btn" id="youtubeConnectBtn" onclick="togglePlatform('youtube')">
+                            <i class="fas fa-spinner fa-spin d-none" id="youtubeSpinner"></i>
+                            <span id="youtubeBtnText">Hubungkan</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Error Message -->
+                    <div id="youtubeError" class="alert alert-danger mt-3 small d-none"></div>
+                </div>
+            </div>
+            
+            <!-- TikTok Card -->
+            <div class="col-md-6">
+                <div class="platform-card" id="tiktokCard">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fab fa-tiktok fa-3x me-3"></i>
+                        <div>
+                            <h5 class="mb-1">TikTok</h5>
+                            <span class="status-badge" id="tiktokStatusBadge">Memeriksa...</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-muted small mb-3">
+                        Hubungkan akun TikTok Anda untuk mengakses konten viral, tutorial, dan tantangan eksklusif.
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" id="tiktokUsername"></small>
+                        <button class="btn connect-btn" id="tiktokConnectBtn" onclick="togglePlatform('tiktok')">
+                            <i class="fas fa-spinner fa-spin d-none" id="tiktokSpinner"></i>
+                            <span id="tiktokBtnText">Hubungkan</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Error Message -->
+                    <div id="tiktokError" class="alert alert-danger mt-3 small d-none"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Section (Tampil jika platform terhubung) -->
+        <div class="row mt-4" id="contentSection" style="display: none;">
+            <div class="col-12">
+                <h4 class="mb-3">Konten Eksklusif</h4>
+                <div class="row" id="exclusiveContent">
+                    <!-- Konten akan diisi via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentUser = null;
+        let platforms = {
+            youtube: { connected: false, error: null, channelName: null },
+            tiktok: { connected: false, error: null, username: null }
+        };
+
+        // Cek session
+        window.onload = function() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(user);
+            document.getElementById('userName').textContent = currentUser.name || 'User';
+            document.getElementById('userAvatar').textContent = (currentUser.name || 'U').charAt(0);
+            
+            // Load platform status dari localStorage
+            loadPlatformStatus();
+        };
+
+        // Load platform status
+        function loadPlatformStatus() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.email === currentUser.email);
+            
+            if (user && user.platforms) {
+                platforms = user.platforms;
+                updatePlatformUI();
+            }
+            
+            // Jika sudah ada yang terhubung, tampilkan konten
+            if (platforms.youtube.connected || platforms.tiktok.connected) {
+                document.getElementById('contentSection').style.display = 'block';
+                loadExclusiveContent();
+            }
+        }
+
+        // Update UI berdasarkan status platform
+        function updatePlatformUI() {
+            // Update YouTube
+            if (platforms.youtube.connected) {
+                document.getElementById('youtubeCard').classList.add('connected');
+                document.getElementById('youtubeCard').classList.remove('disconnected');
+                document.getElementById('youtubeStatusBadge').className = 'status-badge status-connected';
+                document.getElementById('youtubeStatusBadge').innerHTML = '<i class="fas fa-check-circle me-1"></i>Terhubung';
+                document.getElementById('youtubeConnectBtn').className = 'btn btn-outline-danger connect-btn';
+                document.getElementById('youtubeBtnText').textContent = 'Putuskan';
+                document.getElementById('youtubeChannelName').textContent = platforms.youtube.channelName || 'YouTube Channel';
+                document.getElementById('youtubeError').classList.add('d-none');
+            } else {
+                document.getElementById('youtubeCard').classList.add('disconnected');
+                document.getElementById('youtubeCard').classList.remove('connected');
+                document.getElementById('youtubeStatusBadge').className = 'status-badge status-disconnected';
+                
+                if (platforms.youtube.error) {
+                    document.getElementById('youtubeStatusBadge').innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Gagal';
+                    document.getElementById('youtubeError').innerHTML = '<i class="fas fa-info-circle me-2"></i>' + platforms.youtube.error;
+                    document.getElementById('youtubeError').classList.remove('d-none');
+                } else {
+                    document.getElementById('youtubeStatusBadge').innerHTML = '<i class="fas fa-times-circle me-1"></i>Belum Terhubung';
+                }
+                
+                document.getElementById('youtubeConnectBtn').className = 'btn btn-danger connect-btn';
+                document.getElementById('youtubeBtnText').textContent = 'Hubungkan';
+                document.getElementById('youtubeChannelName').textContent = '';
+            }
+            
+            // Update TikTok
+            if (platforms.tiktok.connected) {
+                document.getElementById('tiktokCard').classList.add('connected');
+                document.getElementById('tiktokCard').classList.remove('disconnected');
+                document.getElementById('tiktokStatusBadge').className = 'status-badge status-connected';
+                document.getElementById('tiktokStatusBadge').innerHTML = '<i class="fas fa-check-circle me-1"></i>Terhubung';
+                document.getElementById('tiktokConnectBtn').className = 'btn btn-outline-dark connect-btn';
+                document.getElementById('tiktokBtnText').textContent = 'Putuskan';
+                document.getElementById('tiktokUsername').textContent = platforms.tiktok.username || '@username';
+                document.getElementById('tiktokError').classList.add('d-none');
+            } else {
+                document.getElementById('tiktokCard').classList.add('disconnected');
+                document.getElementById('tiktokCard').classList.remove('connected');
+                document.getElementById('tiktokStatusBadge').className = 'status-badge status-disconnected';
+                
+                if (platforms.tiktok.error) {
+                    document.getElementById('tiktokStatusBadge').innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Gagal';
+                    document.getElementById('tiktokError').innerHTML = '<i class="fas fa-info-circle me-2"></i>' + platforms.tiktok.error;
+                    document.getElementById('tiktokError').classList.remove('d-none');
+                } else {
+                    document.getElementById('tiktokStatusBadge').innerHTML = '<i class="fas fa-times-circle me-1"></i>Belum Terhubung';
+                }
+                
+                document.getElementById('tiktokConnectBtn').className = 'btn btn-dark connect-btn';
+                document.getElementById('tiktokBtnText').textContent = 'Hubungkan';
+                document.getElementById('tiktokUsername').textContent = '';
+            }
+            
+            // Simpan status ke localStorage
+            savePlatformStatus();
+            
+            // Tampilkan/sembunyikan konten eksklusif
+            if (platforms.youtube.connected || platforms.tiktok.connected) {
+                document.getElementById('contentSection').style.display = 'block';
+                loadExclusiveContent();
+            } else {
+                document.getElementById('contentSection').style.display = 'none';
+            }
+        }
+
+        // Simpan status platform ke localStorage
+        function savePlatformStatus() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userIndex = users.findIndex(u => u.email === currentUser.email);
+            
+            if (userIndex !== -1) {
+                users[userIndex].platforms = platforms;
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // Update currentUser
+                currentUser.platforms = platforms;
+                localStorage.setItem('user', JSON.stringify(currentUser));
+            }
+        }
+
+        // Toggle platform connection
+        async function togglePlatform(platform) {
+            const spinner = document.getElementById(`${platform}Spinner`);
+            const btnText = document.getElementById(`${platform}BtnText`);
+            const originalText = btnText.textContent;
+            
+            // Tampilkan spinner
+            spinner.classList.remove('d-none');
+            btnText.textContent = 'Memproses...';
+            
+            try {
+                if (!platforms[platform].connected) {
+                    // Mencoba menghubungkan
+                    await connectPlatform(platform);
+                } else {
+                    // Memutuskan koneksi
+                    disconnectPlatform(platform);
+                }
+            } catch (error) {
+                showAlert('danger', 'Terjadi kesalahan. Silakan coba lagi.');
+            } finally {
+                // Sembunyikan spinner
+                spinner.classList.add('d-none');
+                btnText.textContent = originalText;
+            }
+        }
+
+        // Connect ke platform
+        async function connectPlatform(platform) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Simulasi koneksi (70% sukses, 30% gagal)
+                    const success = Math.random() < 0.7;
+                    
+                    if (success) {
+                        // Berhasil terhubung
+                        platforms[platform].connected = true;
+                        platforms[platform].error = null;
+                        
+                        if (platform === 'youtube') {
+                            platforms.youtube.channelName = 'Marga Jaya Bird Shop Channel';
+                        } else {
+                            platforms.tiktok.username = '@margajayabirdshop';
+                        }
+                        
+                        showAlert('success', `Berhasil terhubung dengan ${platform === 'youtube' ? 'YouTube' : 'TikTok'}!`);
+                    } else {
+                        // Gagal terhubung - tampilkan alasan
+                        platforms[platform].connected = false;
+                        platforms[platform].error = getRandomError(platform);
+                        
+                        showAlert('danger', `Gagal terhubung: ${platforms[platform].error}`);
+                    }
+                    
+                    updatePlatformUI();
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        // Disconnect dari platform
+        function disconnectPlatform(platform) {
+            platforms[platform].connected = false;
+            platforms[platform].error = null;
+            
+            if (platform === 'youtube') {
+                platforms.youtube.channelName = null;
+            } else {
+                platforms.tiktok.username = null;
+            }
+            
+            showAlert('info', `Koneksi ${platform === 'youtube' ? 'YouTube' : 'TikTok'} diputuskan.`);
+            updatePlatformUI();
+        }
+
+        // Dapatkan pesan error random
+        function getRandomError(platform) {
+            const errors = {
+                youtube: [
+                    'Token akses tidak valid atau telah kedaluwarsa',
+                    'Akun YouTube tidak memiliki izin yang diperlukan',
+                    'Terjadi kesalahan autentikasi dengan YouTube API',
+                    'Sesi telah berakhir, silakan login ulang',
+                    'Akun YouTube tidak ditemukan atau telah dinonaktifkan'
+                ],
+                tiktok: [
+                    'Access token tidak valid atau telah kedaluwarsa',
+                    'Akun TikTok tidak memiliki akses ke API',
+                    'Terjadi kesalahan saat menghubungkan ke TikTok',
+                    'Sesi TikTok telah berakhir',
+                    'Akun TikTok tidak memenuhi persyaratan untuk akses API'
+                ]
+            };
+            
+            const platformErrors = errors[platform];
+            return platformErrors[Math.floor(Math.random() * platformErrors.length)];
+        }
+
+        // Load konten eksklusif
+        function loadExclusiveContent() {
+            const contentDiv = document.getElementById('exclusiveContent');
+            let content = '';
+            
+            if (platforms.youtube.connected) {
+                content += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5><i class="fab fa-youtube text-danger me-2"></i>Konten YouTube Eksklusif</h5>
+                                <ul class="list-unstyled mt-3">
+                                    <li class="mb-2"><i class="fas fa-play-circle text-danger me-2"></i>Video Tutorial Perawatan Burung</li>
+                                    <li class="mb-2"><i class="fas fa-video text-danger me-2"></i>Live Streaming Eksklusif</li>
+                                    <li class="mb-2"><i class="fas fa-music text-danger me-2"></i>Playlist Kicau Burung Premium</li>
+                                </ul>
+                                <a href="#" class="btn btn-sm btn-outline-danger mt-2">Lihat Semua</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (platforms.tiktok.connected) {
+                content += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5><i class="fab fa-tiktok me-2"></i>Konten TikTok Eksklusif</h5>
+                                <ul class="list-unstyled mt-3">
+                                    <li class="mb-2"><i class="fas fa-film me-2"></i>Tutorial Perawatan 60 Detik</li>
+                                    <li class="mb-2"><i class="fas fa-fire me-2"></i>Challenge Eksklusif</li>
+                                    <li class="mb-2"><i class="fas fa-music me-2"></i>Soundtrack Burung Populer</li>
+                                </ul>
+                                <a href="#" class="btn btn-sm btn-outline-dark mt-2">Lihat Semua</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            contentDiv.innerHTML = content || '<p class="text-muted">Hubungkan platform untuk melihat konten eksklusif</p>';
+        }
+
+        // Tampilkan alert
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = '../auth/login.html';
+        }
+    </script>
+</body>
+</html>
