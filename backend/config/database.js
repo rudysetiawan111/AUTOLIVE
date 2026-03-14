@@ -29,4 +29,43 @@ const connectDB = async () => {
   }
 };
 
+// backend/config/database.js
+const config = require('./environment');
+
+module.exports = {
+  development: {
+    username: config.DB_USER,
+    password: config.DB_PASSWORD,
+    database: config.DB_NAME + '_dev',
+    host: config.DB_HOST,
+    port: config.DB_PORT,
+    dialect: 'postgres',
+    logging: true
+  },
+  test: {
+    username: config.DB_USER,
+    password: config.DB_PASSWORD,
+    database: config.DB_NAME + '_test',
+    host: config.DB_HOST,
+    port: config.DB_PORT,
+    dialect: 'postgres',
+    logging: false
+  },
+  production: {
+    username: config.DB_USER,
+    password: config.DB_PASSWORD,
+    database: config.DB_NAME,
+    host: config.DB_HOST,
+    port: config.DB_PORT,
+    dialect: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: config.DB_SSL ? {
+        require: true,
+        rejectUnauthorized: false
+      } : false
+    }
+  }
+};
+
 module.exports = connectDB;
