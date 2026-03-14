@@ -887,6 +887,21 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -1189,8 +1204,8 @@
                                     <p>Use an authenticator app to get verification codes</p>
                                 </div>
                                 <div class="two-factor-status">
-                                    <span class="status-badge status-inactive">Disabled</span>
-                                    <button class="btn btn-sm btn-primary" onclick="enable2FA()">
+                                    <span class="status-badge status-inactive" id="twoFAStatus">Disabled</span>
+                                    <button class="btn btn-sm btn-primary" onclick="enable2FA()" id="twoFABtn">
                                         <i class="bi bi-shield-plus"></i> Enable
                                     </button>
                                 </div>
@@ -1202,8 +1217,8 @@
                                     <p>Receive verification codes via SMS</p>
                                 </div>
                                 <div class="two-factor-status">
-                                    <span class="status-badge status-inactive">Disabled</span>
-                                    <button class="btn btn-sm btn-primary" onclick="enableSMS2FA()">
+                                    <span class="status-badge status-inactive" id="sms2FAStatus">Disabled</span>
+                                    <button class="btn btn-sm btn-primary" onclick="enableSMS2FA()" id="sms2FABtn">
                                         <i class="bi bi-chat"></i> Enable
                                     </button>
                                 </div>
@@ -1450,15 +1465,15 @@
 
                         <div class="account-item" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white;">
                             <div style="flex: 1;">
-                                <h4 style="color: white; margin-bottom: 4px;">Pro Plan</h4>
-                                <p style="color: rgba(255,255,255,0.9); margin: 0;">$29.99/month · Next billing on Apr 14, 2025</p>
+                                <h4 style="color: white; margin-bottom: 4px;" id="planName">Pro Plan</h4>
+                                <p style="color: rgba(255,255,255,0.9); margin: 0;" id="planDetails">$29.99/month · Next billing on Apr 14, 2025</p>
                             </div>
-                            <span class="status-badge" style="background: white; color: var(--primary-color);">Active</span>
+                            <span class="status-badge" style="background: white; color: var(--primary-color);" id="planStatus">Active</span>
                         </div>
 
                         <div style="margin: 24px 0;">
                             <h4 style="font-size: 14px; margin-bottom: 16px;">Plan Features</h4>
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;" id="planFeatures">
                                 <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> 10 YouTube Channels</div>
                                 <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> 5 TikTok Accounts</div>
                                 <div><i class="bi bi-check-circle-fill" style="color: var(--secondary-color);"></i> Unlimited Uploads</div>
@@ -1548,6 +1563,29 @@
         </div>
     </div>
 
+    <!-- Verify Phone Modal -->
+    <div class="modal fade" id="verifyPhoneModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Verify Phone Number</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>We've sent a verification code to <span id="phoneDisplay"></span></p>
+                    <div class="form-group">
+                        <label class="form-label">Verification Code</label>
+                        <input type="text" class="form-control" id="verificationCode" placeholder="Enter 6-digit code">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmPhoneVerification()">Verify</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 2FA Setup Modal -->
     <div class="modal fade" id="twoFAModal" tabindex="-1">
         <div class="modal-dialog">
@@ -1559,13 +1597,13 @@
                 <div class="modal-body">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <div style="background: var(--light-bg); padding: 20px; border-radius: 8px; display: inline-block;">
-                            <i class="bi bi-qr-code" style="font-size: 64px;"></i>
+                            <i class="bi bi-qr-code" style="font-size: 64px;" id="qrCodePlaceholder"></i>
                         </div>
                     </div>
-                    <p style="text-align: center; margin-bottom: 20px;">Scan this QR code with your authenticator app</p>
+                    <p style="text-align: center; margin-bottom: 20px;" id="twoFASecret">Scan this QR code with your authenticator app</p>
                     <div class="form-group">
                         <label class="form-label">Verification Code</label>
-                        <input type="text" class="form-control" placeholder="Enter 6-digit code">
+                        <input type="text" class="form-control" id="twoFACode" placeholder="Enter 6-digit code">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1606,6 +1644,11 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -1613,85 +1656,244 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
-    <script>
-        // Account Settings Manager Class
+    <!-- Main Script dengan Integrasi API -->
+    <script type="module">
+        import API from '/assets/js/api.js';
+
+        // Account Settings Manager Class dengan Integrasi API
         class AccountSettingsManager {
             constructor() {
-                this.apiBaseUrl = '/api/v1';
                 this.user = null;
                 this.cropper = null;
+                this.sessions = [];
+                this.notifications = [];
+                this.connectedAccounts = [];
                 
                 this.init();
             }
 
             async init() {
                 await this.loadUserData();
+                await this.loadSessions();
+                await this.loadNotificationPreferences();
+                await this.loadConnectedAccounts();
                 this.setupEventListeners();
             }
 
+            // UI Helpers
+            showLoading(show = true) {
+                document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+            }
+
+            showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icon = {
+                    'success': 'check-circle',
+                    'error': 'exclamation-circle',
+                    'warning': 'exclamation-triangle',
+                    'info': 'info-circle'
+                }[type] || 'info-circle';
+                
+                toast.innerHTML = `
+                    <i class="bi bi-${icon}"></i>
+                    <span>${message}</span>
+                `;
+                
+                container.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            // API Calls
             async loadUserData() {
                 try {
-                    // Simulate API call - replace with actual API
-                    await this.simulateApiCall();
-                    
-                    // Update UI with user data
+                    this.showLoading(true);
+                    const response = await API.users.getProfile();
+                    this.user = response.data;
                     this.updateUserUI();
-                    
                 } catch (error) {
-                    this.showToast('Error loading user data', 'error');
+                    this.showToast(error.message || 'Error loading user data', 'error');
                     console.error('Load error:', error);
+                } finally {
+                    this.showLoading(false);
                 }
             }
 
-            simulateApiCall() {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        this.user = {
-                            firstName: 'John',
-                            lastName: 'Doe',
-                            displayName: 'John Doe',
-                            email: 'john.doe@example.com',
-                            phone: '+1 234 567 8900',
-                            bio: 'Content creator and automation enthusiast. Managing multiple YouTube and TikTok channels.',
-                            location: 'New York, USA',
-                            timezone: 'EST',
-                            language: 'en',
-                            avatar: null,
-                            emailVerified: true,
-                            phoneVerified: false,
-                            twoFAEnabled: false,
-                            plan: 'pro',
-                            planExpiry: '2025-04-14'
-                        };
-                        resolve();
-                    }, 500);
-                });
+            async loadSessions() {
+                try {
+                    const response = await API.users.getSessions();
+                    this.sessions = response.data.sessions || [];
+                    this.updateSessionsUI();
+                } catch (error) {
+                    console.error('Error loading sessions:', error);
+                }
+            }
+
+            async loadNotificationPreferences() {
+                try {
+                    const response = await API.users.getNotificationPreferences();
+                    this.notifications = response.data.preferences || {};
+                    this.updateNotificationsUI();
+                } catch (error) {
+                    console.error('Error loading notification preferences:', error);
+                }
+            }
+
+            async loadConnectedAccounts() {
+                try {
+                    const response = await API.users.getConnectedAccounts();
+                    this.connectedAccounts = response.data.accounts || [];
+                    this.updateConnectedAccountsUI();
+                } catch (error) {
+                    console.error('Error loading connected accounts:', error);
+                }
             }
 
             updateUserUI() {
                 if (!this.user) return;
 
                 // Update form fields
-                document.getElementById('firstName').value = this.user.firstName;
-                document.getElementById('lastName').value = this.user.lastName;
-                document.getElementById('displayName').value = this.user.displayName;
-                document.getElementById('email').value = this.user.email;
-                document.getElementById('phone').value = this.user.phone;
-                document.getElementById('bio').value = this.user.bio;
-                document.getElementById('location').value = this.user.location;
-                document.getElementById('timezone').value = this.user.timezone;
-                document.getElementById('language').value = this.user.language;
+                document.getElementById('firstName').value = this.user.firstName || '';
+                document.getElementById('lastName').value = this.user.lastName || '';
+                document.getElementById('displayName').value = this.user.displayName || '';
+                document.getElementById('email').value = this.user.email || '';
+                document.getElementById('phone').value = this.user.phone || '';
+                document.getElementById('bio').value = this.user.bio || '';
+                document.getElementById('location').value = this.user.location || '';
+                document.getElementById('timezone').value = this.user.timezone || 'EST';
+                document.getElementById('language').value = this.user.language || 'en';
+
+                // Update email verification button
+                const emailVerifyBtn = document.querySelector('#email + .btn');
+                if (emailVerifyBtn) {
+                    if (this.user.emailVerified) {
+                        emailVerifyBtn.innerHTML = '<i class="bi bi-check-circle"></i> Verified';
+                        emailVerifyBtn.disabled = true;
+                    } else {
+                        emailVerifyBtn.innerHTML = '<i class="bi bi-shield-check"></i> Verify';
+                        emailVerifyBtn.disabled = false;
+                    }
+                }
+
+                // Update phone verification button
+                const phoneVerifyBtn = document.querySelector('#phone + .btn');
+                if (phoneVerifyBtn) {
+                    if (this.user.phoneVerified) {
+                        phoneVerifyBtn.innerHTML = '<i class="bi bi-check-circle"></i> Verified';
+                        phoneVerifyBtn.disabled = true;
+                    } else {
+                        phoneVerifyBtn.innerHTML = '<i class="bi bi-shield-check"></i> Verify';
+                        phoneVerifyBtn.disabled = false;
+                    }
+                }
 
                 // Update avatar
-                const initials = this.user.firstName.charAt(0) + this.user.lastName.charAt(0);
+                const initials = (this.user.firstName?.charAt(0) || 'J') + (this.user.lastName?.charAt(0) || 'D');
                 document.getElementById('avatarInitials').textContent = initials;
                 document.getElementById('headerAvatar').textContent = initials;
-                document.getElementById('headerName').textContent = this.user.displayName;
+                document.getElementById('headerName').textContent = this.user.displayName || 'User';
 
-                // Update verification badges
-                if (this.user.emailVerified) {
-                    // Email verified
+                // Update avatar image if exists
+                if (this.user.avatar) {
+                    const avatarContainer = document.querySelector('.profile-avatar-large');
+                    avatarContainer.innerHTML = `<img src="${this.user.avatar}" alt="Avatar"><div class="avatar-overlay"><i class="bi bi-camera"></i></div>`;
                 }
+
+                // Update 2FA status
+                const twoFAStatus = document.getElementById('twoFAStatus');
+                const twoFABtn = document.getElementById('twoFABtn');
+                if (this.user.twoFAEnabled) {
+                    twoFAStatus.textContent = 'Enabled';
+                    twoFAStatus.className = 'status-badge status-active';
+                    twoFABtn.innerHTML = '<i class="bi bi-shield-x"></i> Disable';
+                } else {
+                    twoFAStatus.textContent = 'Disabled';
+                    twoFAStatus.className = 'status-badge status-inactive';
+                    twoFABtn.innerHTML = '<i class="bi bi-shield-plus"></i> Enable';
+                }
+
+                // Update SMS 2FA status
+                const sms2FAStatus = document.getElementById('sms2FAStatus');
+                const sms2FABtn = document.getElementById('sms2FABtn');
+                if (this.user.sms2FAEnabled) {
+                    sms2FAStatus.textContent = 'Enabled';
+                    sms2FAStatus.className = 'status-badge status-active';
+                    sms2FABtn.innerHTML = '<i class="bi bi-chat-x"></i> Disable';
+                } else {
+                    sms2FAStatus.textContent = 'Disabled';
+                    sms2FAStatus.className = 'status-badge status-inactive';
+                    sms2FABtn.innerHTML = '<i class="bi bi-chat"></i> Enable';
+                }
+
+                // Update billing info
+                if (this.user.plan) {
+                    document.getElementById('planName').textContent = this.user.plan.name || 'Pro Plan';
+                    document.getElementById('planDetails').textContent = 
+                        `${this.user.plan.price || '$29.99'}/${this.user.plan.interval || 'month'} · Next billing on ${this.user.plan.nextBilling || 'Apr 14, 2025'}`;
+                    document.getElementById('planStatus').textContent = this.user.plan.status || 'Active';
+                }
+            }
+
+            updateSessionsUI() {
+                const sessionsContainer = document.querySelector('#sessionsTab .session-item:first-child')?.parentNode;
+                if (!sessionsContainer) return;
+
+                // Remove existing sessions except the first one (current session)
+                while (sessionsContainer.children.length > 1) {
+                    sessionsContainer.removeChild(sessionsContainer.lastChild);
+                }
+
+                // Add sessions from API
+                this.sessions.forEach((session, index) => {
+                    if (index === 0) return; // Skip current session
+                    
+                    const sessionEl = document.createElement('div');
+                    sessionEl.className = 'session-item';
+                    sessionEl.innerHTML = `
+                        <div class="session-device">
+                            <i class="bi bi-${session.deviceType === 'mobile' ? 'phone' : 'laptop'}"></i>
+                        </div>
+                        <div class="session-info">
+                            <div class="session-device-name">${session.deviceName || 'Unknown Device'}</div>
+                            <div class="session-location">${session.location || 'Unknown'} · ${session.ip || '0.0.0.0'}</div>
+                            <div class="session-time">Last active ${this.formatTimeAgo(session.lastActive)}</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="revokeSession(${session.id})">
+                            <i class="bi bi-x-circle"></i> Revoke
+                        </button>
+                    `;
+                    sessionsContainer.appendChild(sessionEl);
+                });
+            }
+
+            updateNotificationsUI() {
+                const notifIds = ['notifUpload', 'notifFailed', 'notifComment', 'notifSubscriber', 'notifReport', 'notifSystem'];
+                notifIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && this.notifications[id] !== undefined) {
+                        el.checked = this.notifications[id];
+                    }
+                });
+            }
+
+            updateConnectedAccountsUI() {
+                // This would update the connected accounts list
+                // For now, we'll keep the static UI
+            }
+
+            formatTimeAgo(timestamp) {
+                if (!timestamp) return 'Unknown';
+                const seconds = Math.floor((new Date() - new Date(timestamp)) / 1000);
+                
+                if (seconds < 60) return 'just now';
+                if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+                return `${Math.floor(seconds / 86400)} days ago`;
             }
 
             setupEventListeners() {
@@ -1707,7 +1909,7 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const avatarContainer = document.querySelector('.profile-avatar-large');
-                    avatarContainer.innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
+                    avatarContainer.innerHTML = `<img src="${e.target.result}" alt="Avatar"><div class="avatar-overlay"><i class="bi bi-camera"></i></div>`;
                     
                     // Initialize cropper if needed
                     if (this.cropper) {
@@ -1717,7 +1919,7 @@
                 reader.readAsDataURL(file);
             }
 
-            handleAvatarUpload(input) {
+            async handleAvatarUpload(input) {
                 const file = input.files[0];
                 if (!file) return;
 
@@ -1733,42 +1935,62 @@
                     return;
                 }
 
-                this.previewAvatar(file);
-                this.showToast('Avatar uploaded successfully', 'success');
-            }
-
-            removeAvatar() {
-                const avatarContainer = document.querySelector('.profile-avatar-large');
-                const initials = this.user.firstName.charAt(0) + this.user.lastName.charAt(0);
-                avatarContainer.innerHTML = `<div class="avatar-initials">${initials}</div>`;
-                
-                this.showToast('Avatar removed', 'info');
-            }
-
-            saveProfile() {
-                const profileData = {
-                    firstName: document.getElementById('firstName').value,
-                    lastName: document.getElementById('lastName').value,
-                    displayName: document.getElementById('displayName').value,
-                    phone: document.getElementById('phone').value,
-                    bio: document.getElementById('bio').value,
-                    location: document.getElementById('location').value,
-                    timezone: document.getElementById('timezone').value,
-                    language: document.getElementById('language').value
-                };
-
-                // Validate required fields
-                if (!profileData.firstName || !profileData.lastName) {
-                    this.showToast('First name and last name are required', 'error');
-                    return;
+                try {
+                    this.showLoading(true);
+                    const response = await API.users.uploadAvatar(file);
+                    this.user.avatar = response.data.avatarUrl;
+                    this.updateUserUI();
+                    this.showToast('Avatar uploaded successfully', 'success');
+                } catch (error) {
+                    this.showToast(error.message || 'Error uploading avatar', 'error');
+                } finally {
+                    this.showLoading(false);
                 }
+            }
 
-                // Simulate API call
-                setTimeout(() => {
-                    Object.assign(this.user, profileData);
+            async removeAvatar() {
+                try {
+                    this.showLoading(true);
+                    await API.users.removeAvatar();
+                    this.user.avatar = null;
+                    this.updateUserUI();
+                    this.showToast('Avatar removed', 'info');
+                } catch (error) {
+                    this.showToast(error.message || 'Error removing avatar', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async saveProfile() {
+                try {
+                    const profileData = {
+                        firstName: document.getElementById('firstName').value,
+                        lastName: document.getElementById('lastName').value,
+                        displayName: document.getElementById('displayName').value,
+                        phone: document.getElementById('phone').value,
+                        bio: document.getElementById('bio').value,
+                        location: document.getElementById('location').value,
+                        timezone: document.getElementById('timezone').value,
+                        language: document.getElementById('language').value
+                    };
+
+                    // Validate required fields
+                    if (!profileData.firstName || !profileData.lastName) {
+                        this.showToast('First name and last name are required', 'error');
+                        return;
+                    }
+
+                    this.showLoading(true);
+                    const response = await API.users.updateProfile(profileData);
+                    this.user = { ...this.user, ...profileData };
                     this.updateUserUI();
                     this.showToast('Profile updated successfully', 'success');
-                }, 500);
+                } catch (error) {
+                    this.showToast(error.message || 'Error updating profile', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
             checkPasswordStrength() {
@@ -1796,7 +2018,7 @@
                 strengthText.textContent = strengthLevels[Math.min(strength, 4)];
             }
 
-            changePassword() {
+            async changePassword() {
                 const current = document.getElementById('currentPassword').value;
                 const newPass = document.getElementById('newPassword').value;
                 const confirm = document.getElementById('confirmPassword').value;
@@ -1816,39 +2038,89 @@
                     return;
                 }
 
-                // Simulate API call
-                setTimeout(() => {
+                try {
+                    this.showLoading(true);
+                    await API.users.changePassword({
+                        currentPassword: current,
+                        newPassword: newPass
+                    });
+                    
                     this.showToast('Password changed successfully', 'success');
                     document.getElementById('passwordForm').reset();
-                }, 1000);
+                    document.querySelectorAll('.strength-segment').forEach(seg => seg.classList.remove('active'));
+                    document.getElementById('strengthText').textContent = 'Weak password';
+                } catch (error) {
+                    this.showToast(error.message || 'Error changing password', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
-            enable2FA() {
-                new bootstrap.Modal(document.getElementById('twoFAModal')).show();
+            async enable2FA() {
+                try {
+                    this.showLoading(true);
+                    const response = await API.users.setup2FA();
+                    
+                    // Show QR code
+                    const modal = new bootstrap.Modal(document.getElementById('twoFAModal'));
+                    document.getElementById('qrCodePlaceholder').innerHTML = `<img src="${response.data.qrCode}" alt="QR Code" style="width: 200px;">`;
+                    document.getElementById('twoFASecret').innerHTML = `Secret: <strong>${response.data.secret}</strong>`;
+                    modal.show();
+                } catch (error) {
+                    this.showToast(error.message || 'Error setting up 2FA', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
-            enableSMS2FA() {
+            async verify2FA() {
+                const code = document.getElementById('twoFACode').value;
+                if (!code || code.length !== 6) {
+                    this.showToast('Please enter a valid 6-digit code', 'error');
+                    return;
+                }
+
+                try {
+                    this.showLoading(true);
+                    await API.users.verify2FA({ code });
+                    
+                    this.user.twoFAEnabled = true;
+                    this.updateUserUI();
+                    this.showToast('Two-factor authentication enabled', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('twoFAModal')).hide();
+                } catch (error) {
+                    this.showToast(error.message || 'Error verifying 2FA', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async enableSMS2FA() {
                 if (!this.user.phoneVerified) {
                     this.showToast('Please verify your phone number first', 'warning');
                     return;
                 }
-                this.showToast('SMS 2FA enabled', 'success');
+
+                try {
+                    this.showLoading(true);
+                    await API.users.enableSMS2FA();
+                    
+                    this.user.sms2FAEnabled = true;
+                    this.updateUserUI();
+                    this.showToast('SMS 2FA enabled', 'success');
+                } catch (error) {
+                    this.showToast(error.message || 'Error enabling SMS 2FA', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
-            verify2FA() {
-                // Simulate verification
-                setTimeout(() => {
-                    this.user.twoFAEnabled = true;
-                    this.showToast('Two-factor authentication enabled', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('twoFAModal')).hide();
-                }, 1000);
+            async verifyEmail() {
+                const modal = new bootstrap.Modal(document.getElementById('changeEmailModal'));
+                modal.show();
             }
 
-            verifyEmail() {
-                new bootstrap.Modal(document.getElementById('changeEmailModal')).show();
-            }
-
-            updateEmail() {
+            async updateEmail() {
                 const newEmail = document.getElementById('newEmail').value;
                 const password = document.getElementById('confirmPasswordEmail').value;
 
@@ -1857,90 +2129,193 @@
                     return;
                 }
 
-                // Simulate API call
-                setTimeout(() => {
-                    this.user.email = newEmail;
-                    this.user.emailVerified = false;
-                    document.getElementById('email').value = newEmail;
-                    this.showToast('Verification email sent', 'info');
+                if (!this.isValidEmail(newEmail)) {
+                    this.showToast('Please enter a valid email address', 'error');
+                    return;
+                }
+
+                try {
+                    this.showLoading(true);
+                    await API.users.changeEmail({ newEmail, password });
+                    
+                    this.showToast('Verification email sent. Please check your inbox.', 'info');
                     bootstrap.Modal.getInstance(document.getElementById('changeEmailModal')).hide();
-                }, 1000);
+                    
+                    // Clear form
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('confirmPasswordEmail').value = '';
+                } catch (error) {
+                    this.showToast(error.message || 'Error updating email', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
-            verifyPhone() {
-                this.showToast('Verification code sent to your phone', 'info');
-                // Show verification modal
+            async verifyPhone() {
+                const phone = document.getElementById('phone').value;
+                if (!phone) {
+                    this.showToast('Please enter a phone number', 'error');
+                    return;
+                }
+
+                try {
+                    this.showLoading(true);
+                    const response = await API.users.sendPhoneVerification({ phone });
+                    
+                    document.getElementById('phoneDisplay').textContent = phone;
+                    const modal = new bootstrap.Modal(document.getElementById('verifyPhoneModal'));
+                    modal.show();
+                } catch (error) {
+                    this.showToast(error.message || 'Error sending verification code', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
-            saveNotifications() {
+            async confirmPhoneVerification() {
+                const code = document.getElementById('verificationCode').value;
+                if (!code || code.length !== 6) {
+                    this.showToast('Please enter a valid 6-digit code', 'error');
+                    return;
+                }
+
+                try {
+                    this.showLoading(true);
+                    await API.users.verifyPhone({ code });
+                    
+                    this.user.phoneVerified = true;
+                    this.updateUserUI();
+                    this.showToast('Phone number verified', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('verifyPhoneModal')).hide();
+                    
+                    // Clear code
+                    document.getElementById('verificationCode').value = '';
+                } catch (error) {
+                    this.showToast(error.message || 'Error verifying phone', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+
+            async saveNotifications() {
                 const preferences = {
-                    upload: document.getElementById('notifUpload').checked,
-                    failed: document.getElementById('notifFailed').checked,
-                    comment: document.getElementById('notifComment').checked,
-                    subscriber: document.getElementById('notifSubscriber').checked,
-                    report: document.getElementById('notifReport').checked,
-                    system: document.getElementById('notifSystem').checked
+                    notifUpload: document.getElementById('notifUpload').checked,
+                    notifFailed: document.getElementById('notifFailed').checked,
+                    notifComment: document.getElementById('notifComment').checked,
+                    notifSubscriber: document.getElementById('notifSubscriber').checked,
+                    notifReport: document.getElementById('notifReport').checked,
+                    notifSystem: document.getElementById('notifSystem').checked
                 };
 
-                // Simulate save
-                setTimeout(() => {
+                try {
+                    this.showLoading(true);
+                    await API.users.updateNotificationPreferences(preferences);
+                    this.notifications = preferences;
                     this.showToast('Notification preferences saved', 'success');
-                }, 500);
+                } catch (error) {
+                    this.showToast(error.message || 'Error saving preferences', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
             manageAccount(platform) {
                 this.showToast(`Managing ${platform} account`, 'info');
+                // Would open account management modal
             }
 
             connectNewAccount() {
                 this.showToast('Connect new account feature coming soon', 'info');
+                // Would open OAuth flow
             }
 
-            revokeSession(sessionId) {
-                if (confirm('Revoke this session? The device will be signed out.')) {
+            async revokeSession(sessionId) {
+                if (!confirm('Revoke this session? The device will be signed out.')) return;
+
+                try {
+                    this.showLoading(true);
+                    await API.users.revokeSession({ sessionId });
+                    
+                    await this.loadSessions();
                     this.showToast('Session revoked', 'success');
+                } catch (error) {
+                    this.showToast(error.message || 'Error revoking session', 'error');
+                } finally {
+                    this.showLoading(false);
                 }
             }
 
-            revokeAllSessions() {
-                if (confirm('Sign out all other devices? You will remain signed in on this device.')) {
+            async revokeAllSessions() {
+                if (!confirm('Sign out all other devices? You will remain signed in on this device.')) return;
+
+                try {
+                    this.showLoading(true);
+                    await API.users.revokeAllSessions();
+                    
+                    await this.loadSessions();
                     this.showToast('All other sessions revoked', 'success');
+                } catch (error) {
+                    this.showToast(error.message || 'Error revoking sessions', 'error');
+                } finally {
+                    this.showLoading(false);
                 }
             }
 
             upgradePlan() {
                 this.showToast('Upgrade plan feature coming soon', 'info');
+                // Would redirect to pricing page
             }
 
             manageBilling() {
                 this.showToast('Billing management coming soon', 'info');
+                // Would open billing portal
             }
 
             viewInvoices() {
                 this.showToast('Invoices feature coming soon', 'info');
+                // Would show invoices list
             }
 
-            downloadData() {
-                const data = {
-                    user: this.user,
-                    timestamp: new Date().toISOString()
-                };
+            async downloadData() {
+                try {
+                    this.showLoading(true);
+                    const response = await API.users.exportData();
+                    
+                    // Create download link
+                    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `user_data_${new Date().toISOString().split('T')[0]}.json`;
+                    link.click();
 
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `user_data_${new Date().toISOString().split('T')[0]}.json`;
-                link.click();
-
-                this.showToast('Data download started', 'success');
+                    this.showToast('Data download started', 'success');
+                } catch (error) {
+                    this.showToast(error.message || 'Error downloading data', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
-            deactivateAccount() {
-                if (confirm('Deactivate your account? You can reactivate anytime by logging in.')) {
+            async deactivateAccount() {
+                if (!confirm('Deactivate your account? You can reactivate anytime by logging in.')) return;
+
+                try {
+                    this.showLoading(true);
+                    await API.users.deactivateAccount();
+                    
                     this.showToast('Account deactivated', 'warning');
                     setTimeout(() => {
                         window.location.href = '/auth/login.html';
                     }, 2000);
+                } catch (error) {
+                    this.showToast(error.message || 'Error deactivating account', 'error');
+                } finally {
+                    this.showLoading(false);
                 }
             }
 
@@ -1948,7 +2323,7 @@
                 new bootstrap.Modal(document.getElementById('deleteAccountModal')).show();
             }
 
-            confirmDelete() {
+            async confirmDelete() {
                 const confirm = document.getElementById('deleteConfirm').value;
                 const password = document.getElementById('deletePassword').value;
 
@@ -1962,13 +2337,19 @@
                     return;
                 }
 
-                // Simulate API call
-                setTimeout(() => {
+                try {
+                    this.showLoading(true);
+                    await API.users.deleteAccount({ password });
+                    
                     this.showToast('Account permanently deleted', 'error');
                     setTimeout(() => {
                         window.location.href = '/auth/login.html';
                     }, 2000);
-                }, 1000);
+                } catch (error) {
+                    this.showToast(error.message || 'Error deleting account', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
             switchSettingsTab(tab) {
@@ -1993,24 +2374,7 @@
 
             toggleUserMenu() {
                 // Implement user dropdown menu
-            }
-
-            showToast(message, type = 'info') {
-                const container = document.getElementById('toastContainer');
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.innerHTML = `
-                    <i class="bi bi-${type === 'success' ? 'check-circle' : 
-                                     type === 'error' ? 'exclamation-circle' :
-                                     type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-                    <span>${message}</span>
-                `;
-                
-                container.appendChild(toast);
-                
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
+                console.log('Toggle user menu');
             }
         }
 
@@ -2021,31 +2385,32 @@
         });
 
         // Global functions
-        function switchSettingsTab(tab) { manager.switchSettingsTab(tab); }
-        function toggleUserMenu() { manager.toggleUserMenu(); }
-        function handleAvatarUpload(input) { manager.handleAvatarUpload(input); }
-        function removeAvatar() { manager.removeAvatar(); }
-        function saveProfile() { manager.saveProfile(); }
-        function checkPasswordStrength() { manager.checkPasswordStrength(); }
-        function changePassword() { manager.changePassword(); }
-        function enable2FA() { manager.enable2FA(); }
-        function enableSMS2FA() { manager.enableSMS2FA(); }
-        function verify2FA() { manager.verify2FA(); }
-        function verifyEmail() { manager.verifyEmail(); }
-        function verifyPhone() { manager.verifyPhone(); }
-        function updateEmail() { manager.updateEmail(); }
-        function saveNotifications() { manager.saveNotifications(); }
-        function manageAccount(platform) { manager.manageAccount(platform); }
-        function connectNewAccount() { manager.connectNewAccount(); }
-        function revokeSession(sessionId) { manager.revokeSession(sessionId); }
-        function revokeAllSessions() { manager.revokeAllSessions(); }
-        function upgradePlan() { manager.upgradePlan(); }
-        function manageBilling() { manager.manageBilling(); }
-        function viewInvoices() { manager.viewInvoices(); }
-        function downloadData() { manager.downloadData(); }
-        function deactivateAccount() { manager.deactivateAccount(); }
-        function deleteAccount() { manager.deleteAccount(); }
-        function confirmDelete() { manager.confirmDelete(); }
+        window.switchSettingsTab = (tab) => manager.switchSettingsTab(tab);
+        window.toggleUserMenu = () => manager.toggleUserMenu();
+        window.handleAvatarUpload = (input) => manager.handleAvatarUpload(input);
+        window.removeAvatar = () => manager.removeAvatar();
+        window.saveProfile = () => manager.saveProfile();
+        window.checkPasswordStrength = () => manager.checkPasswordStrength();
+        window.changePassword = () => manager.changePassword();
+        window.enable2FA = () => manager.enable2FA();
+        window.enableSMS2FA = () => manager.enableSMS2FA();
+        window.verify2FA = () => manager.verify2FA();
+        window.verifyEmail = () => manager.verifyEmail();
+        window.verifyPhone = () => manager.verifyPhone();
+        window.confirmPhoneVerification = () => manager.confirmPhoneVerification();
+        window.updateEmail = () => manager.updateEmail();
+        window.saveNotifications = () => manager.saveNotifications();
+        window.manageAccount = (platform) => manager.manageAccount(platform);
+        window.connectNewAccount = () => manager.connectNewAccount();
+        window.revokeSession = (sessionId) => manager.revokeSession(sessionId);
+        window.revokeAllSessions = () => manager.revokeAllSessions();
+        window.upgradePlan = () => manager.upgradePlan();
+        window.manageBilling = () => manager.manageBilling();
+        window.viewInvoices = () => manager.viewInvoices();
+        window.downloadData = () => manager.downloadData();
+        window.deactivateAccount = () => manager.deactivateAccount();
+        window.deleteAccount = () => manager.deleteAccount();
+        window.confirmDelete = () => manager.confirmDelete();
     </script>
 </body>
 </html>
