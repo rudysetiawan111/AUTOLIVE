@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Marga Jaya Bird Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            width: 250px;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            padding-left: 30px;
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.2);
+            border-left: 4px solid white;
+        }
+        .sidebar .nav-link i {
+            width: 25px;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+            height: 100%;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-change {
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .date-range {
+            background: white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+        }
+        .date-range:hover {
+            border-color: #667eea;
+        }
+        .platform-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-youtube {
+            background: #ff000020;
+            color: #ff0000;
+        }
+        .badge-tiktok {
+            background: #00000020;
+            color: #000000;
+        }
+        .insight-card {
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            border-left: 4px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .metric-highlight {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .trend-up {
+            color: #28a745;
+        }
+        .trend-down {
+            color: #dc3545;
+        }
+        .export-btn {
+            border: 2px dashed #667eea;
+            background: transparent;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .export-btn:hover {
+            background: #667eea;
+            color: white;
+            border: 2px solid #667eea;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .comparison-table {
+            font-size: 14px;
+        }
+        .comparison-table td {
+            padding: 12px 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar">
+                    <div class="p-4">
+                        <h4><i class="fas fa-dove me-2"></i>Bird Shop</h4>
+                        <p class="text-white-50 small">Analytics Dashboard</p>
+                        <hr class="bg-white">
+                    </div>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link" href="admin-dashboard.html">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <a class="nav-link active" href="#">
+                            <i class="fas fa-chart-line me-2"></i>Analytics
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('overview')">
+                            <i class="fas fa-globe me-2"></i>Overview
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('youtube')">
+                            <i class="fab fa-youtube me-2"></i>YouTube Analytics
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('tiktok')">
+                            <i class="fab fa-tiktok me-2"></i>TikTok Analytics
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('comparison')">
+                            <i class="fas fa-balance-scale me-2"></i>Platform Comparison
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('reports')">
+                            <i class="fas fa-file-alt me-2"></i>Reports
+                        </a>
+                        <hr class="bg-white">
+                        <a class="nav-link" href="admin-dashboard.html">
+                            <i class="fas fa-arrow-left me-2"></i>Kembali
+                        </a>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Navbar -->
+                <nav class="navbar navbar-expand-lg navbar-light bg-white rounded-3 mb-4 shadow-sm">
+                    <div class="container-fluid">
+                        <span class="navbar-brand">
+                            <i class="fas fa-chart-line me-2 text-primary"></i>
+                            Analytics & Insights
+                        </span>
+                        <div class="d-flex align-items-center">
+                            <!-- Date Range Selector -->
+                            <div class="dropdown me-3">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" id="dateRangeBtn">
+                                    <i class="fas fa-calendar me-2"></i>7 Hari Terakhir
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="changeDateRange(7)">7 Hari Terakhir</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changeDateRange(30)">30 Hari Terakhir</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changeDateRange(90)">3 Bulan Terakhir</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changeDateRange(365)">1 Tahun Terakhir</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="customDateRange()">Custom Range</a></li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Export Button -->
+                            <button class="btn export-btn me-3" onclick="exportAnalytics()">
+                                <i class="fas fa-download me-2"></i>Export
+                            </button>
+                            
+                            <!-- User Info -->
+                            <div class="d-flex align-items-center" id="userInfo">
+                                <div class="user-avatar me-2">A</div>
+                                <div>
+                                    <small class="d-block text-muted">Admin</small>
+                                    <strong id="adminName">Admin</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+                
+                <!-- Overview Section (Default) -->
+                <div id="overview-section">
+                    <!-- Key Metrics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #667eea20; color: #667eea;">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-value" id="totalViews">0</div>
+                                <div class="stat-label">Total Views</div>
+                                <div class="stat-change">
+                                    <span class="trend-up"><i class="fas fa-arrow-up me-1"></i>12.5%</span>
+                                    <span class="text-muted ms-2">vs periode lalu</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #28a74520; color: #28a745;">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="stat-value" id="totalEngagement">0</div>
+                                <div class="stat-label">Total Engagement</div>
+                                <div class="stat-change">
+                                    <span class="trend-up"><i class="fas fa-arrow-up me-1"></i>8.2%</span>
+                                    <span class="text-muted ms-2">vs periode lalu</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #ffc10720; color: #ffc107;">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="stat-value" id="avgEngagement">0%</div>
+                                <div class="stat-label">Avg. Engagement Rate</div>
+                                <div class="stat-change">
+                                    <span class="trend-down"><i class="fas fa-arrow-down me-1"></i>2.1%</span>
+                                    <span class="text-muted ms-2">vs periode lalu</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #dc354520; color: #dc3545;">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-value" id="avgWatchTime">0m</div>
+                                <div class="stat-label">Avg. Watch Time</div>
+                                <div class="stat-change">
+                                    <span class="trend-up"><i class="fas fa-arrow-up me-1"></i>5.3%</span>
+                                    <span class="text-muted ms-2">vs periode lalu</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Chart -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-container">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="chart-title">Platform Performance Trend</h5>
+                                    <div>
+                                        <span class="platform-badge badge-youtube me-2">
+                                            <i class="fab fa-youtube me-1"></i>YouTube
+                                        </span>
+                                        <span class="platform-badge badge-tiktok">
+                                            <i class="fab fa-tiktok me-1"></i>TikTok
+                                        </span>
+                                    </div>
+                                </div>
+                                <canvas id="performanceChart" height="300"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Platform Distribution</h5>
+                                <canvas id="distributionChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Insights & Recommendations -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="chart-container">
+                                <h5 class="chart-title">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    Insights & Recommendations
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="insight-card">
+                                            <div class="metric-highlight">+45%</div>
+                                            <div class="metric-label">YouTube Views</div>
+                                            <p class="mt-2 small text-muted">
+                                                Peningkatan signifikan pada konten tutorial perawatan burung. 
+                                                Pertimbangkan untuk membuat lebih banyak konten seri tutorial.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="insight-card">
+                                            <div class="metric-highlight">32%</div>
+                                            <div class="metric-label">TikTok Engagement</div>
+                                            <p class="mt-2 small text-muted">
+                                                Engagement rate TikTok lebih tinggi dari YouTube. 
+                                                Fokus pada konten pendek dan trend challenges.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="insight-card">
+                                            <div class="metric-highlight">18-24</div>
+                                            <div class="metric-label">Dominant Age Group</div>
+                                            <p class="mt-2 small text-muted">
+                                                Audiens didominasi usia 18-24 tahun. 
+                                                Sesuaikan konten dengan preferensi gen Z.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- YouTube Analytics Section -->
+                <div id="youtube-section" style="display: none;">
+                    <h4 class="mb-4">
+                        <i class="fab fa-youtube text-danger me-2"></i>
+                        YouTube Analytics
+                    </h4>
+                    
+                    <!-- YouTube Metrics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #ff000020; color: #ff0000;">
+                                    <i class="fab fa-youtube"></i>
+                                </div>
+                                <div class="stat-value" id="youtubeViews">0</div>
+                                <div class="stat-label">Total Views</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #ff000020; color: #ff0000;">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-value" id="youtubeWatchTime">0</div>
+                                <div class="stat-label">Watch Time (hours)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #ff000020; color: #ff0000;">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-value" id="youtubeSubscribers">0</div>
+                                <div class="stat-label">Subscribers</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #ff000020; color: #ff0000;">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stat-value" id="youtubeRevenue">Rp 0</div>
+                                <div class="stat-label">Estimated Revenue</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- YouTube Charts -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-container">
+                                <h5 class="chart-title">YouTube Views Trend</h5>
+                                <canvas id="youtubeViewsChart" height="300"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Top Performing Videos</h5>
+                                <div class="list-group" id="topYoutubeVideos">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Demographics -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Audience Demographics</h5>
+                                <canvas id="youtubeDemographicsChart" height="250"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Traffic Sources</h5>
+                                <canvas id="youtubeTrafficChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TikTok Analytics Section -->
+                <div id="tiktok-section" style="display: none;">
+                    <h4 class="mb-4">
+                        <i class="fab fa-tiktok me-2"></i>
+                        TikTok Analytics
+                    </h4>
+                    
+                    <!-- TikTok Metrics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #00000010; color: #000000;">
+                                    <i class="fab fa-tiktok"></i>
+                                </div>
+                                <div class="stat-value" id="tiktokViews">0</div>
+                                <div class="stat-label">Video Views</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #00000010; color: #000000;">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="stat-value" id="tiktokLikes">0</div>
+                                <div class="stat-label">Total Likes</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #00000010; color: #000000;">
+                                    <i class="fas fa-share"></i>
+                                </div>
+                                <div class="stat-value" id="tiktokShares">0</div>
+                                <div class="stat-label">Shares</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: #00000010; color: #000000;">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="stat-value" id="tiktokFollowers">0</div>
+                                <div class="stat-label">Followers</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TikTok Charts -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-container">
+                                <h5 class="chart-title">TikTok Engagement Trend</h5>
+                                <canvas id="tiktokEngagementChart" height="300"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Trending Hashtags</h5>
+                                <div class="list-group" id="trendingHashtags">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Content Performance -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Video Performance</h5>
+                                <div class="table-responsive">
+                                    <table class="table comparison-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Video</th>
+                                                <th>Views</th>
+                                                <th>Likes</th>
+                                                <th>Comments</th>
+                                                <th>Shares</th>
+                                                <th>Engagement Rate</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tiktokVideosTable">
+                                            <!-- Will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Platform Comparison Section -->
+                <div id="comparison-section" style="display: none;">
+                    <h4 class="mb-4">
+                        <i class="fas fa-balance-scale me-2"></i>
+                        Platform Comparison
+                    </h4>
+                    
+                    <!-- Comparison Metrics -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Engagement Rate Comparison</h5>
+                                <canvas id="engagementComparisonChart" height="300"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Audience Growth</h5>
+                                <canvas id="growthComparisonChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detailed Comparison Table -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Platform Comparison Matrix</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered comparison-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Metric</th>
+                                                <th>YouTube</th>
+                                                <th>TikTok</th>
+                                                <th>Difference</th>
+                                                <th>Best Platform</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="comparisonTableBody">
+                                            <!-- Will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cross-Platform Insights -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="chart-container">
+                                <h5 class="chart-title">
+                                    <i class="fas fa-brain me-2"></i>
+                                    Cross-Platform Insights
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="insight-card">
+                                            <h6><i class="fas fa-check-circle text-success me-2"></i>YouTube Strength</h6>
+                                            <p class="small text-muted">
+                                                Konten tutorial panjang memiliki performa baik di YouTube. 
+                                                Rata-rata watch time 8 menit dengan retention rate 65%.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="insight-card">
+                                            <h6><i class="fas fa-check-circle text-success me-2"></i>TikTok Strength</h6>
+                                            <p class="small text-muted">
+                                                Konten pendek dan challenges viral di TikTok. 
+                                                Engagement rate 2x lebih tinggi dari YouTube.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="insight-card">
+                                            <h6><i class="fas fa-sync-alt text-primary me-2"></i>Synergy Opportunity</h6>
+                                            <p class="small text-muted">
+                                                Gunakan TikTok untuk teaser dan YouTube untuk konten lengkap. 
+                                                Cross-promote untuk maksimalkan reach.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reports Section -->
+                <div id="reports-section" style="display: none;">
+                    <h4 class="mb-4">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Analytics Reports
+                    </h4>
+                    
+                    <div class="row">
+                        <!-- Report Cards -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                        <span class="badge bg-success">New</span>
+                                    </div>
+                                    <h5 class="card-title">Monthly Performance Report</h5>
+                                    <p class="card-text small text-muted">
+                                        Complete analytics for all platforms including engagement metrics, 
+                                        audience growth, and revenue analysis.
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <small class="text-muted">Generated: March 14, 2026</small>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="downloadReport('monthly')">
+                                            <i class="fas fa-download me-1"></i>Download
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <i class="fas fa-file-excel fa-2x text-success"></i>
+                                    </div>
+                                    <h5 class="card-title">Audience Insights Report</h5>
+                                    <p class="card-text small text-muted">
+                                        Detailed demographic analysis, audience behavior patterns, 
+                                        and content preferences across platforms.
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <small class="text-muted">Generated: March 10, 2026</small>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="downloadReport('audience')">
+                                            <i class="fas fa-download me-1"></i>Download
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <i class="fas fa-chart-line fa-2x text-primary"></i>
+                                    </div>
+                                    <h5 class="card-title">Competitor Analysis</h5>
+                                    <p class="card-text small text-muted">
+                                        Comparative analysis with competitors in the bird care niche, 
+                                        market positioning, and opportunity gaps.
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <small class="text-muted">Generated: March 5, 2026</small>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="downloadReport('competitor')">
+                                            <i class="fas fa-download me-1"></i>Download
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Scheduled Reports -->
+                        <div class="col-12 mt-2">
+                            <div class="chart-container">
+                                <h5 class="chart-title">Scheduled Reports</h5>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Report Name</th>
+                                                <th>Frequency</th>
+                                                <th>Next Generation</th>
+                                                <th>Format</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Weekly Performance Summary</td>
+                                                <td>Every Monday</td>
+                                                <td>March 17, 2026</td>
+                                                <td>PDF, Excel</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-secondary me-1">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Monthly Analytics Report</td>
+                                                <td>1st of every month</td>
+                                                <td>April 1, 2026</td>
+                                                <td>PDF</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-secondary me-1">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Date Range Modal -->
+    <div class="modal fade" id="dateRangeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Date Range</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="applyCustomDateRange()">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let currentUser = null;
+        let currentDateRange = 7; // Default 7 days
+        let performanceChart, distributionChart, youtubeViewsChart, tiktokEngagementChart;
+        let engagementComparisonChart, growthComparisonChart, youtubeDemographicsChart, youtubeTrafficChart;
+        
+        // Sample data for analytics (in real app, this would come from API)
+        const sampleData = {
+            youtube: {
+                views: [12500, 14800, 16200, 15800, 17900, 19500, 21200],
+                watchTime: 450,
+                subscribers: 15200,
+                revenue: 12500000,
+                topVideos: [
+                    { title: 'Cara Merawat Burung Kicau', views: '45K', engagement: '8.2%' },
+                    { title: 'Tips Memilih Pakan Burung', views: '32K', engagement: '7.5%' },
+                    { title: 'Suara Burung Masteran', views: '28K', engagement: '9.1%' },
+                    { title: 'Kandang Burung Ideal', views: '21K', engagement: '6.8%' }
+                ],
+                demographics: {
+                    '18-24': 35,
+                    '25-34': 28,
+                    '35-44': 20,
+                    '45-54': 12,
+                    '55+': 5
+                },
+                traffic: {
+                    'Search': 45,
+                    'Suggested': 25,
+                    'External': 15,
+                    'Direct': 10,
+                    'Other': 5
+                }
+            },
+            tiktok: {
+                views: [45200, 48900, 52300, 56700, 59800, 64500, 68900],
+                likes: 125000,
+                shares: 45000,
+                followers: 87500,
+                hashtags: [
+                    { tag: '#birdcare', uses: '125K' },
+                    { tag: '#kicauburung', uses: '98K' },
+                    { tag: '#burungindonesia', uses: '87K' },
+                    { tag: '#birdlover', uses: '76K' }
+                ],
+                videos: [
+                    { title: 'Burung Lovebird Mandi', views: '125K', likes: '15K', comments: '450', shares: '1.2K', engagement: '12.5%' },
+                    { title: 'Tips Melatih Burung', views: '98K', likes: '12K', comments: '320', shares: '890', engagement: '11.8%' },
+                    { title: 'Suara Burung Masteran', views: '87K', likes: '9.8K', comments: '280', shares: '650', engagement: '10.2%' },
+                    { title: 'Kandang Burung Mini', views: '76K', likes: '8.5K', comments: '210', shares: '540', engagement: '9.8%' }
+                ]
+            }
+        };
+
+        window.onload = function() {
+            // Check authentication
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(user);
+            if (!currentUser.isAdmin) {
+                window.location.href = 'user-dashboard.html';
+                return;
+            }
+            
+            document.getElementById('adminName').textContent = currentUser.name || 'Admin';
+            
+            // Initialize charts
+            initCharts();
+            
+            // Load analytics data
+            loadAnalyticsData();
+        };
+
+        function initCharts() {
+            // Performance Chart (Line chart for both platforms)
+            const perfCtx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(perfCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4',                 'Day 5', 'Day 6', 'Day 7'],
+                    datasets: [{
+                        label: 'YouTube Views',
+                        data: sampleData.youtube.views,
+                        borderColor: '#ff0000',
+                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'TikTok Views',
+                        data: sampleData.tiktok.views,
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Distribution Chart (Pie chart)
+            const distCtx = document.getElementById('distributionChart').getContext('2d');
+            distributionChart = new Chart(distCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['YouTube', 'TikTok'],
+                    datasets: [{
+                        data: [45, 55],
+                        backgroundColor: ['#ff0000', '#000000'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // YouTube Views Chart
+            const ytViewsCtx = document.getElementById('youtubeViewsChart').getContext('2d');
+            youtubeViewsChart = new Chart(ytViewsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+                    datasets: [{
+                        label: 'Views',
+                        data: sampleData.youtube.views,
+                        borderColor: '#ff0000',
+                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // TikTok Engagement Chart
+            const tiktokCtx = document.getElementById('tiktokEngagementChart').getContext('2d');
+            tiktokEngagementChart = new Chart(tiktokCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+                    datasets: [{
+                        label: 'Views',
+                        data: sampleData.tiktok.views,
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // YouTube Demographics Chart
+            const demoCtx = document.getElementById('youtubeDemographicsChart').getContext('2d');
+            youtubeDemographicsChart = new Chart(demoCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(sampleData.youtube.demographics),
+                    datasets: [{
+                        label: 'Audience Distribution (%)',
+                        data: Object.values(sampleData.youtube.demographics),
+                        backgroundColor: '#667eea',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // YouTube Traffic Chart
+            const trafficCtx = document.getElementById('youtubeTrafficChart').getContext('2d');
+            youtubeTrafficChart = new Chart(trafficCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(sampleData.youtube.traffic),
+                    datasets: [{
+                        data: Object.values(sampleData.youtube.traffic),
+                        backgroundColor: ['#ff0000', '#ff6b6b', '#ffa500', '#4ecdc4', '#95a5a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Engagement Comparison Chart
+            const engageCtx = document.getElementById('engagementComparisonChart').getContext('2d');
+            engagementComparisonChart = new Chart(engageCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'YouTube',
+                        data: [8.2, 8.5, 8.1, 8.8],
+                        backgroundColor: '#ff0000',
+                        borderRadius: 5
+                    }, {
+                        label: 'TikTok',
+                        data: [12.5, 13.2, 12.8, 13.5],
+                        backgroundColor: '#000000',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Growth Comparison Chart
+            const growthCtx = document.getElementById('growthComparisonChart').getContext('2d');
+            growthComparisonChart = new Chart(growthCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'YouTube Subscribers',
+                        data: [15200, 15450, 15780, 16120],
+                        borderColor: '#ff0000',
+                        tension: 0.4
+                    }, {
+                        label: 'TikTok Followers',
+                        data: [87500, 89100, 90800, 92600],
+                        borderColor: '#000000',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function loadAnalyticsData() {
+            // Update overview metrics
+            const totalViews = sampleData.youtube.views.reduce((a, b) => a + b, 0) + 
+                              sampleData.tiktok.views.reduce((a, b) => a + b, 0);
+            const totalEngagement = sampleData.youtube.views.reduce((a, b) => a + b, 0) * 0.08 + 
+                                   sampleData.tiktok.views.reduce((a, b) => a + b, 0) * 0.12;
+            
+            document.getElementById('totalViews').textContent = totalViews.toLocaleString();
+            document.getElementById('totalEngagement').textContent = Math.round(totalEngagement).toLocaleString();
+            document.getElementById('avgEngagement').textContent = '10.5%';
+            document.getElementById('avgWatchTime').textContent = '4.2m';
+
+            // Update YouTube metrics
+            document.getElementById('youtubeViews').textContent = sampleData.youtube.views.reduce((a, b) => a + b, 0).toLocaleString();
+            document.getElementById('youtubeWatchTime').textContent = sampleData.youtube.watchTime;
+            document.getElementById('youtubeSubscribers').textContent = sampleData.youtube.subscribers.toLocaleString();
+            document.getElementById('youtubeRevenue').textContent = 'Rp ' + (sampleData.youtube.revenue / 1000000).toFixed(1) + 'M';
+
+            // Update TikTok metrics
+            document.getElementById('tiktokViews').textContent = sampleData.tiktok.views.reduce((a, b) => a + b, 0).toLocaleString();
+            document.getElementById('tiktokLikes').textContent = sampleData.tiktok.likes.toLocaleString();
+            document.getElementById('tiktokShares').textContent = sampleData.tiktok.shares.toLocaleString();
+            document.getElementById('tiktokFollowers').textContent = sampleData.tiktok.followers.toLocaleString();
+
+            // Populate top YouTube videos
+            const topVideosContainer = document.getElementById('topYoutubeVideos');
+            topVideosContainer.innerHTML = '';
+            sampleData.youtube.topVideos.forEach(video => {
+                topVideosContainer.innerHTML += `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${video.title}</h6>
+                                <small class="text-muted">${video.views} views</small>
+                            </div>
+                            <span class="badge bg-success">${video.engagement}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Populate trending hashtags
+            const hashtagsContainer = document.getElementById('trendingHashtags');
+            hashtagsContainer.innerHTML = '';
+            sampleData.tiktok.hashtags.forEach(hashtag => {
+                hashtagsContainer.innerHTML += `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>${hashtag.tag}</span>
+                            <span class="badge bg-dark">${hashtag.uses} uses</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Populate TikTok videos table
+            const tiktokTable = document.getElementById('tiktokVideosTable');
+            tiktokTable.innerHTML = '';
+            sampleData.tiktok.videos.forEach(video => {
+                tiktokTable.innerHTML += `
+                    <tr>
+                        <td>${video.title}</td>
+                        <td>${video.views}</td>
+                        <td>${video.likes}</td>
+                        <td>${video.comments}</td>
+                        <td>${video.shares}</td>
+                        <td><span class="badge bg-success">${video.engagement}</span></td>
+                    </tr>
+                `;
+            });
+
+            // Populate comparison table
+            const comparisonTable = document.getElementById('comparisonTableBody');
+            const metrics = [
+                { name: 'Total Views', youtube: '148.5K', tiktok: '456.3K', diff: '+207%', best: 'TikTok' },
+                { name: 'Engagement Rate', youtube: '8.2%', tiktok: '12.5%', diff: '+52%', best: 'TikTok' },
+                { name: 'Avg. Watch Time', youtube: '4.2m', tiktok: '0.8m', diff: '-81%', best: 'YouTube' },
+                { name: 'Subscribers/Followers', youtube: '15.2K', tiktok: '87.5K', diff: '+475%', best: 'TikTok' },
+                { name: 'Content Frequency', youtube: '2/week', tiktok: '7/week', diff: '+250%', best: 'TikTok' },
+                { name: 'Revenue Estimate', youtube: 'Rp 12.5M', tiktok: 'Rp 8.2M', diff: '-34%', best: 'YouTube' }
+            ];
+
+            comparisonTable.innerHTML = '';
+            metrics.forEach(metric => {
+                const diffClass = metric.diff.includes('+') ? 'text-success' : 'text-danger';
+                const bestClass = metric.best === 'YouTube' ? 'text-danger' : 'text-dark';
+                comparisonTable.innerHTML += `
+                    <tr>
+                        <td><strong>${metric.name}</strong></td>
+                        <td>${metric.youtube}</td>
+                        <td>${metric.tiktok}</td>
+                        <td class="${diffClass}">${metric.diff}</td>
+                        <td class="${bestClass}"><strong>${metric.best}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function showSection(section) {
+            // Hide all sections
+            document.getElementById('overview-section').style.display = 'none';
+            document.getElementById('youtube-section').style.display = 'none';
+            document.getElementById('tiktok-section').style.display = 'none';
+            document.getElementById('comparison-section').style.display = 'none';
+            document.getElementById('reports-section').style.display = 'none';
+            
+            // Show selected section
+            document.getElementById(section + '-section').style.display = 'block';
+            
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.closest('.nav-link').classList.add('active');
+            
+            // Refresh charts if needed (small delay for DOM update)
+            setTimeout(() => {
+                if (section === 'youtube') {
+                    youtubeViewsChart.update();
+                    youtubeDemographicsChart.update();
+                    youtubeTrafficChart.update();
+                } else if (section === 'tiktok') {
+                    tiktokEngagementChart.update();
+                } else if (section === 'comparison') {
+                    engagementComparisonChart.update();
+                    growthComparisonChart.update();
+                } else if (section === 'overview') {
+                    performanceChart.update();
+                    distributionChart.update();
+                }
+            }, 100);
+        }
+
+        function changeDateRange(days) {
+            currentDateRange = days;
+            document.getElementById('dateRangeBtn').innerHTML = `<i class="fas fa-calendar me-2"></i>${getDateRangeText(days)}`;
+            
+            // In real app, fetch new data from API
+            // For demo, just update charts with sample data
+            updateChartsForDateRange(days);
+        }
+
+        function getDateRangeText(days) {
+            if (days === 7) return '7 Hari Terakhir';
+            if (days === 30) return '30 Hari Terakhir';
+            if (days === 90) return '3 Bulan Terakhir';
+            if (days === 365) return '1 Tahun Terakhir';
+            return 'Custom Range';
+        }
+
+        function updateChartsForDateRange(days) {
+            // Generate labels based on date range
+            const labels = [];
+            for (let i = days; i > 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                if (days <= 30) {
+                    labels.push(date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
+                } else {
+                    labels.push(date.toLocaleDateString('id-ID', { month: 'short' }));
+                }
+            }
+            
+            // Generate sample data for the range
+            const ytData = [];
+            const ttData = [];
+            for (let i = 0; i < days; i++) {
+                ytData.push(Math.floor(Math.random() * 10000) + 5000);
+                ttData.push(Math.floor(Math.random() * 15000) + 8000);
+            }
+            
+            // Update performance chart
+            performanceChart.data.labels = labels;
+            performanceChart.data.datasets[0].data = ytData;
+            performanceChart.data.datasets[1].data = ttData;
+            performanceChart.update();
+            
+            // Update other charts similarly
+            youtubeViewsChart.data.labels = labels;
+            youtubeViewsChart.data.datasets[0].data = ytData;
+            youtubeViewsChart.update();
+            
+            tiktokEngagementChart.data.labels = labels;
+            tiktokEngagementChart.data.datasets[0].data = ttData;
+            tiktokEngagementChart.update();
+        }
+
+        function customDateRange() {
+            const modal = new bootstrap.Modal(document.getElementById('dateRangeModal'));
+            modal.show();
+        }
+
+        function applyCustomDateRange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                currentDateRange = diffDays;
+                document.getElementById('dateRangeBtn').innerHTML = `<i class="fas fa-calendar me-2"></i>${startDate} - ${endDate}`;
+                
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('dateRangeModal')).hide();
+                
+                // Update charts
+                updateChartsForDateRange(diffDays);
+            }
+        }
+
+        function exportAnalytics() {
+            // Create export data
+            const exportData = {
+                dateRange: currentDateRange,
+                overview: {
+                    totalViews: document.getElementById('totalViews').textContent,
+                    totalEngagement: document.getElementById('totalEngagement').textContent,
+                    avgEngagement: document.getElementById('avgEngagement').textContent,
+                    avgWatchTime: document.getElementById('avgWatchTime').textContent
+                },
+                youtube: sampleData.youtube,
+                tiktok: sampleData.tiktok,
+                exportedAt: new Date().toISOString()
+            };
+            
+            // Convert to JSON and download
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `analytics_export_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            
+            // Show success message
+            alert('Data berhasil diekspor!');
+        }
+
+        function downloadReport(type) {
+            let filename = '';
+            switch(type) {
+                case 'monthly':
+                    filename = 'monthly_performance_report.pdf';
+                    break;
+                case 'audience':
+                    filename = 'audience_insights_report.xlsx';
+                    break;
+                case 'competitor':
+                    filename = 'competitor_analysis.pdf';
+                    break;
+            }
+            
+            alert(`Downloading ${filename}...\n(Demo: File download akan berfungsi dengan backend integration)`);
+        }
+
+        // Auto-refresh data every 5 minutes (in production)
+        setInterval(() => {
+            if (currentUser) {
+                loadAnalyticsData();
+                updateChartsForDateRange(currentDateRange);
+            }
+        }, 300000);
+
+        // Resize charts when window resizes
+        window.addEventListener('resize', () => {
+            performanceChart.resize();
+            distributionChart.resize();
+            youtubeViewsChart.resize();
+            tiktokEngagementChart.resize();
+            youtubeDemographicsChart.resize();
+            youtubeTrafficChart.resize();
+            engagementComparisonChart.resize();
+            growthComparisonChart.resize();
+        });
+    </script>
+</body>
+</html>
