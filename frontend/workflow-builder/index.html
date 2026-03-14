@@ -1,11 +1,821 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Workflow Builder</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .sidebar-header h2 {
+            color: #1a1a1a;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .components-list {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .component-item {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: move;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .component-item:hover {
+            background: #e9ecef;
+            border-color: #2196f3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .component-item:active {
+            cursor: grabbing;
+        }
+
+        .component-icon {
+            font-size: 20px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .component-name {
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+
+        .component-desc {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #f8f9fa;
+            border-color: #2196f3;
+        }
+
+        .btn-primary {
+            background: #2196f3;
+            border-color: #2196f3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1976d2;
+        }
+
+        .btn-danger {
+            color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .zoom-controls {
+            margin-left: auto;
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Canvas Styles */
+        .canvas-container {
+            flex: 1;
+            background: #f0f2f5;
+            position: relative;
+            overflow: auto;
+        }
+
+        #workflowCanvas {
+            display: block;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            width: 280px;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .properties-panel h3 {
+            color: #1a1a1a;
+            font-size: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .property-group {
+            margin-bottom: 16px;
+        }
+
+        .property-label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: #2196f3;
+        }
+
+        .no-selection {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 400px;
+            max-width: 90%;
+            padding: 24px;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #1a1a1a;
+            font-size: 18px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .modal-footer .btn {
+            padding: 8px 24px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Workflow Builder</h1>
-  <button onclick="alert('Dummy workflow triggered')">Run Workflow</button>
+    <div class="container">
+        <!-- Sidebar Components -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>📦 Components</h2>
+                <p>Drag & drop to canvas</p>
+            </div>
+            <div class="components-list" id="componentsList">
+                <div class="component-item" draggable="true" data-type="start" data-label="Start" data-icon="▶️">
+                    <div class="component-icon">▶️</div>
+                    <div class="component-name">Start</div>
+                    <div class="component-desc">Begin workflow</div>
+                </div>
+                <div class="component-item" draggable="true" data-type="task" data-label="Task" data-icon="⚙️">
+                    <div class="component-icon">⚙️</div>
+                    <div class="component-name">Task</div>
+                    <div class="component-desc">Execute an action</div>
+                </div>
+                <div class="component-item" draggable="true" data-type="condition" data-label="Condition" data-icon="❓">
+                    <div class="component-icon">❓</div>
+                    <div class="component-name">Condition</div>
+                    <div class="component-desc">Branch based on condition</div>
+                </div>
+                <div class="component-item" draggable="true" data-type="delay" data-label="Delay" data-icon="⏰">
+                    <div class="component-icon">⏰</div>
+                    <div class="component-name">Delay</div>
+                    <div class="component-desc">Wait for specified time</div>
+                </div>
+                <div class="component-item" draggable="true" data-type="notification" data-label="Notification" data-icon="🔔">
+                    <div class="component-icon">🔔</div>
+                    <div class="component-name">Notification</div>
+                    <div class="component-desc">Send notification</div>
+                </div>
+                <div class="component-item" draggable="true" data-type="end" data-label="End" data-icon="⏹️">
+                    <div class="component-icon">⏹️</div>
+                    <div class="component-name">End</div>
+                    <div class="component-desc">Complete workflow</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="toolbar">
+                <button class="btn" onclick="saveWorkflow()">💾 Save</button>
+                <button class="btn" onclick="loadWorkflow()">📂 Load</button>
+                <button class="btn btn-primary" onclick="exportWorkflow()">📤 Export</button>
+                <button class="btn btn-danger" onclick="clearCanvas()">🗑️ Clear</button>
+                <div class="zoom-controls">
+                    <button class="btn" onclick="zoomOut()">−</button>
+                    <span class="btn" style="min-width: 60px;">100%</span>
+                    <button class="btn" onclick="zoomIn()">+</button>
+                </div>
+            </div>
+            <div class="canvas-container" id="canvasContainer">
+                <canvas id="workflowCanvas" width="1200" height="800"></canvas>
+            </div>
+        </div>
+
+        <!-- Properties Panel -->
+        <div class="properties-panel" id="propertiesPanel">
+            <h3>Properties</h3>
+            <div id="propertyEditor">
+                <div class="no-selection">Select a component to edit</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Export Workflow</h3>
+            </div>
+            <div class="modal-body">
+                <textarea id="modalTextarea" class="property-input" rows="10" style="resize: vertical;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">Close</button>
+                <button class="btn btn-primary" onclick="copyToClipboard()">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Workflow Builder Class
+        class WorkflowBuilder {
+            constructor() {
+                this.canvas = document.getElementById('workflowCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.components = [];
+                this.connections = [];
+                this.selectedComponent = null;
+                this.dragging = false;
+                this.dragOffset = { x: 0, y: 0 };
+                this.connecting = false;
+                this.connectionStart = null;
+                this.zoom = 1;
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.render();
+            }
+
+            setupEventListeners() {
+                // Drag and drop
+                document.querySelectorAll('.component-item').forEach(item => {
+                    item.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                            type: item.dataset.type,
+                            label: item.dataset.label,
+                            icon: item.dataset.icon
+                        }));
+                    });
+                });
+
+                // Canvas events
+                this.canvas.addEventListener('dragover', (e) => e.preventDefault());
+                
+                this.canvas.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / this.zoom;
+                    const y = (e.clientY - rect.top) / this.zoom;
+                    
+                    try {
+                        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                        this.addComponent(data.type, data.label, data.icon, x, y);
+                    } catch (err) {
+                        console.error('Drop error:', err);
+                    }
+                });
+
+                // Mouse events for selection and dragging
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', () => this.handleMouseUp());
+                this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
+            }
+
+            addComponent(type, label, icon, x, y) {
+                const component = {
+                    id: Date.now() + Math.random(),
+                    type,
+                    label,
+                    icon,
+                    x,
+                    y,
+                    width: 120,
+                    height: 60,
+                    properties: this.getDefaultProperties(type)
+                };
+                
+                this.components.push(component);
+                this.render();
+            }
+
+            getDefaultProperties(type) {
+                const defaults = {
+                    start: { name: 'Start', description: 'Workflow starts here' },
+                    task: { name: 'Task', description: '', action: 'process' },
+                    condition: { name: 'Condition', description: '', expression: 'true' },
+                    delay: { name: 'Delay', description: '', duration: '5', unit: 'minutes' },
+                    notification: { name: 'Notification', description: '', message: '', recipient: '' },
+                    end: { name: 'End', description: 'Workflow ends here' }
+                };
+                return defaults[type] || {};
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw connections
+                this.connections.forEach(conn => {
+                    const from = this.components.find(c => c.id === conn.from);
+                    const to = this.components.find(c => c.id === conn.to);
+                    
+                    if (from && to) {
+                        this.drawConnection(from, to);
+                    }
+                });
+
+                // Draw components
+                this.components.forEach(component => {
+                    this.drawComponent(component);
+                });
+            }
+
+            drawComponent(component) {
+                const ctx = this.ctx;
+                const isSelected = this.selectedComponent?.id === component.id;
+                
+                // Draw shadow
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 2;
+                
+                // Draw rectangle
+                ctx.fillStyle = this.getComponentColor(component.type);
+                ctx.strokeStyle = isSelected ? '#2196f3' : '#e0e0e0';
+                ctx.lineWidth = isSelected ? 3 : 1;
+                
+                ctx.beginPath();
+                ctx.roundRect(component.x, component.y, component.width, component.height, 8);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+                
+                // Draw icon
+                ctx.font = '20px Arial';
+                ctx.fillStyle = '#333';
+                ctx.fillText(component.icon, component.x + 10, component.y + 35);
+                
+                // Draw label
+                ctx.font = 'bold 12px Arial';
+                ctx.fillStyle = '#333';
+                ctx.fillText(component.label, component.x + 40, component.y + 25);
+                
+                // Draw type
+                ctx.font = '10px Arial';
+                ctx.fillStyle = '#666';
+                ctx.fillText(component.type, component.x + 40, component.y + 40);
+                
+                // Draw connection points
+                if (isSelected) {
+                    this.drawConnectionPoints(component);
+                }
+            }
+
+            drawConnectionPoints(component) {
+                const ctx = this.ctx;
+                const points = this.getConnectionPoints(component);
+                
+                ctx.fillStyle = '#2196f3';
+                
+                points.forEach(point => {
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+            }
+
+            getConnectionPoints(component) {
+                return {
+                    input: { x: component.x, y: component.y + component.height / 2 },
+                    output: { x: component.x + component.width, y: component.y + component.height / 2 }
+                };
+            }
+
+            drawConnection(from, to) {
+                const ctx = this.ctx;
+                const fromPoint = this.getConnectionPoints(from).output;
+                const toPoint = this.getConnectionPoints(to).input;
+                
+                ctx.beginPath();
+                ctx.strokeStyle = '#2196f3';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 3]);
+                
+                // Draw curved line
+                const cp1x = fromPoint.x + 50;
+                const cp1y = fromPoint.y;
+                const cp2x = toPoint.x - 50;
+                const cp2y = toPoint.y;
+                
+                ctx.moveTo(fromPoint.x, fromPoint.y);
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, toPoint.x, toPoint.y);
+                ctx.stroke();
+                
+                // Draw arrow
+                ctx.setLineDash([]);
+                this.drawArrowhead(toPoint.x, toPoint.y, Math.atan2(toPoint.y - cp2y, toPoint.x - cp2x));
+            }
+
+            drawArrowhead(x, y, angle) {
+                const ctx = this.ctx;
+                const size = 8;
+                
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.fillStyle = '#2196f3';
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-size, -size/2);
+                ctx.lineTo(-size, size/2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            getComponentColor(type) {
+                const colors = {
+                    start: '#c8e6c9',
+                    task: '#fff9c4',
+                    condition: '#ffccbc',
+                    delay: '#e1f5fe',
+                    notification: '#e8f0fe',
+                    end: '#ffcdd2'
+                };
+                return colors[type] || '#f5f5f5';
+            }
+
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / this.zoom;
+                const y = (e.clientY - rect.top) / this.zoom;
+                
+                // Check if clicked on a component
+                const clickedComponent = this.findComponentAt(x, y);
+                
+                if (clickedComponent) {
+                    this.selectedComponent = clickedComponent;
+                    this.dragging = true;
+                    this.dragOffset.x = x - clickedComponent.x;
+                    this.dragOffset.y = y - clickedComponent.y;
+                    this.updatePropertiesPanel();
+                } else {
+                    this.selectedComponent = null;
+                    this.updatePropertiesPanel();
+                }
+                
+                this.render();
+            }
+
+            handleMouseMove(e) {
+                if (!this.dragging || !this.selectedComponent) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / this.zoom;
+                const y = (e.clientY - rect.top) / this.zoom;
+                
+                this.selectedComponent.x = x - this.dragOffset.x;
+                this.selectedComponent.y = y - this.dragOffset.y;
+                
+                this.render();
+            }
+
+            handleMouseUp() {
+                this.dragging = false;
+            }
+
+            handleDoubleClick(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / this.zoom;
+                const y = (e.clientY - rect.top) / this.zoom;
+                
+                const component = this.findComponentAt(x, y);
+                
+                if (component && component.type !== 'start' && component.type !== 'end') {
+                    this.startConnecting(component);
+                }
+            }
+
+            findComponentAt(x, y) {
+                return this.components.find(comp => 
+                    x >= comp.x && x <= comp.x + comp.width &&
+                    y >= comp.y && y <= comp.y + comp.height
+                );
+            }
+
+            startConnecting(component) {
+                // Simple connection logic - connect to next component
+                const index = this.components.indexOf(component);
+                if (index < this.components.length - 1) {
+                    const nextComponent = this.components[index + 1];
+                    this.connections.push({
+                        from: component.id,
+                        to: nextComponent.id
+                    });
+                    this.render();
+                }
+            }
+
+            updatePropertiesPanel() {
+                const editor = document.getElementById('propertyEditor');
+                
+                if (!this.selectedComponent) {
+                    editor.innerHTML = '<div class="no-selection">Select a component to edit</div>';
+                    return;
+                }
+                
+                const comp = this.selectedComponent;
+                let html = '';
+                
+                Object.entries(comp.properties).forEach(([key, value]) => {
+                    html += `
+                        <div class="property-group">
+                            <label class="property-label">${key}</label>
+                            <input type="text" class="property-input" value="${value}" 
+                                onchange="updateProperty('${comp.id}', '${key}', this.value)">
+                        </div>
+                    `;
+                });
+                
+                editor.innerHTML = html;
+            }
+
+            deleteSelected() {
+                if (this.selectedComponent) {
+                    this.components = this.components.filter(c => c.id !== this.selectedComponent.id);
+                    this.connections = this.connections.filter(c => 
+                        c.from !== this.selectedComponent.id && c.to !== this.selectedComponent.id
+                    );
+                    this.selectedComponent = null;
+                    this.render();
+                    this.updatePropertiesPanel();
+                }
+            }
+
+            clear() {
+                this.components = [];
+                this.connections = [];
+                this.selectedComponent = null;
+                this.render();
+                this.updatePropertiesPanel();
+            }
+
+            zoomIn() {
+                this.zoom = Math.min(2, this.zoom + 0.1);
+                this.applyZoom();
+            }
+
+            zoomOut() {
+                this.zoom = Math.max(0.5, this.zoom - 0.1);
+                this.applyZoom();
+            }
+
+            applyZoom() {
+                this.canvas.style.transform = `scale(${this.zoom})`;
+                this.canvas.style.transformOrigin = 'top left';
+            }
+
+            export() {
+                const data = {
+                    components: this.components,
+                    connections: this.connections
+                };
+                return JSON.stringify(data, null, 2);
+            }
+
+            import(data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    this.components = parsed.components || [];
+                    this.connections = parsed.connections || [];
+                    this.selectedComponent = null;
+                    this.render();
+                    this.updatePropertiesPanel();
+                    return true;
+                } catch (err) {
+                    console.error('Import error:', err);
+                    return false;
+                }
+            }
+        }
+
+        // CanvasRenderingContext2D extension for rounded rectangles
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+            this.moveTo(x + r, y);
+            this.lineTo(x + w - r, y);
+            this.quadraticCurveTo(x + w, y, x + w, y + r);
+            this.lineTo(x + w, y + h - r);
+            this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            this.lineTo(x + r, y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - r);
+            this.lineTo(x, y + r);
+            this.quadraticCurveTo(x, y, x + r, y);
+            return this;
+        };
+
+        // Initialize WorkflowBuilder
+        const builder = new WorkflowBuilder();
+
+        // Global functions
+        function saveWorkflow() {
+            const data = builder.export();
+            localStorage.setItem('workflow', data);
+            alert('Workflow saved!');
+        }
+
+        function loadWorkflow() {
+            const data = localStorage.getItem('workflow');
+            if (data) {
+                builder.import(data);
+                alert('Workflow loaded!');
+            } else {
+                alert('No saved workflow found');
+            }
+        }
+
+        function exportWorkflow() {
+            const data = builder.export();
+            document.getElementById('modalTextarea').value = data;
+            document.getElementById('modalTitle').textContent = 'Export Workflow';
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function clearCanvas() {
+            if (confirm('Clear all components?')) {
+                builder.clear();
+            }
+        }
+
+        function zoomIn() {
+            builder.zoomIn();
+        }
+
+        function zoomOut() {
+            builder.zoomOut();
+        }
+
+        function updateProperty(componentId, key, value) {
+            const component = builder.components.find(c => c.id === componentId);
+            if (component) {
+                component.properties[key] = value;
+                builder.render();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('modalTextarea');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                builder.deleteSelected();
+            }
+        });
+    </script>
 </body>
 </html>
