@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Marga Jaya Bird Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            padding-left: 30px;
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.2);
+            border-left: 4px solid white;
+        }
+        .sidebar .nav-link i {
+            width: 25px;
+        }
+        .main-content {
+            padding: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .admin-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .modal-content {
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar">
+                    <div class="p-4">
+                        <h4><i class="fas fa-dove me-2"></i>Bird Shop</h4>
+                        <p class="text-white-50 small">Admin Panel</p>
+                        <hr class="bg-white">
+                    </div>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('users')">
+                            <i class="fas fa-users me-2"></i>Kelola Pengguna
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('add-admin')">
+                            <i class="fas fa-user-plus me-2"></i>Tambah Admin
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('platforms')">
+                            <i class="fab fa-youtube me-2"></i>Platform
+                        </a>
+                        <a class="nav-link" href="#" onclick="showSection('settings')">
+                            <i class="fas fa-cog me-2"></i>Pengaturan
+                        </a>
+                        <hr class="bg-white">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Navbar -->
+                <nav class="navbar navbar-expand-lg navbar-light bg-white rounded-3 mb-4 shadow-sm">
+                    <div class="container-fluid">
+                        <span class="navbar-brand">Dashboard Admin</span>
+                        <div class="d-flex align-items-center">
+                            <div class="dropdown me-3">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-bell me-1"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#">Tidak ada notifikasi</a></li>
+                                </ul>
+                            </div>
+                            <div class="d-flex align-items-center" id="userInfo">
+                                <div class="user-avatar me-2">A</div>
+                                <div>
+                                    <small class="d-block text-muted">Admin</small>
+                                    <strong id="adminName">Admin</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+                
+                <!-- Dashboard Section -->
+                <div id="dashboard-section">
+                    <h4 class="mb-4">Selamat datang di Dashboard Admin</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-4">
+                            <div class="stat-card">
+                                <h6 class="text-muted mb-2">Total Pengguna</h6>
+                                <h2 class="mb-0" id="totalUsers">0</h2>
+                                <small class="text-success"><i class="fas fa-arrow-up"></i> +5%</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="stat-card">
+                                <h6 class="text-muted mb-2">Admin Aktif</h6>
+                                <h2 class="mb-0" id="totalAdmins">0</h2>
+                                <small class="text-info"><i class="fas fa-user-shield"></i> </small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="stat-card">
+                                <h6 class="text-muted mb-2">Terhubung YouTube</h6>
+                                <h2 class="mb-0" id="youtubeUsers">0</h2>
+                                <small class="text-danger"><i class="fab fa-youtube"></i> </small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="stat-card">
+                                <h6 class="text-muted mb-2">Terhubung TikTok</h6>
+                                <h2 class="mb-0" id="tiktokUsers">0</h2>
+                                <small class="text-dark"><i class="fab fa-tiktok"></i> </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Aktivitas Terbaru -->
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Aktivitas Terbaru</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Waktu</th>
+                                            <th>Pengguna</th>
+                                            <th>Aktivitas</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentActivities">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">
+                                                <i class="fas fa-spinner fa-spin me-2"></i>Memuat data...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Users Section -->
+                <div id="users-section" style="display: none;">
+                    <h4 class="mb-4">Kelola Pengguna</h4>
+                    
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="mb-0">Daftar Pengguna Terdaftar</h5>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" placeholder="Cari pengguna..." id="searchUser">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Nama</th>
+                                            <th>Email</th>
+                                            <th>Telepon</th>
+                                            <th>Role</th>
+                                            <th>Platform</th>
+                                            <th>Tanggal Daftar</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        <tr>
+                                            <td colspan="8" class="text-center text-muted">
+                                                <i class="fas fa-spinner fa-spin me-2"></i>Memuat data...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Add Admin Section -->
+                <div id="add-admin-section" style="display: none;">
+                    <h4 class="mb-4">Tambah Admin Baru</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Form Tambah Admin</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="addAdminAlert" class="alert d-none"></div>
+                                    
+                                    <form id="addAdminForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Nama Lengkap</label>
+                                            <input type="text" class="form-control" id="adminName" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="adminEmail" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Password</label>
+                                            <input type="password" class="form-control" id="adminPassword" required>
+                                            <small class="text-muted">Minimal 8 karakter</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Konfirmasi Password</label>
+                                            <input type="password" class="form-control" id="adminConfirmPassword" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Role Admin</label>
+                                            <select class="form-select" id="adminRole">
+                                                <option value="super_admin">Super Admin</option>
+                                                <option value="content_admin">Content Admin</option>
+                                                <option value="user_admin">User Admin</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-user-plus me-2"></i>Tambah Admin
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Daftar Admin Aktif</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group" id="adminList">
+                                        <!-- Daftar admin akan diisi via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Platforms Section -->
+                <div id="platforms-section" style="display: none;">
+                    <h4 class="mb-4">Platform Integration</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0"><i class="fab fa-youtube text-danger me-2"></i>YouTube Integration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="flex-grow-1">
+                                            <h6>Status Koneksi</h6>
+                                            <p class="text-success" id="youtubeStatus">
+                                                <i class="fas fa-check-circle me-1"></i>Terhubung
+                                            </p>
+                                        </div>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="reconnectPlatform('youtube')">
+                                            <i class="fas fa-sync-alt me-1"></i>Reconnect
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">YouTube Channel ID</label>
+                                        <input type="text" class="form-control" value="UCxxxxxxxxxxxxxx" readonly>
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Terhubung dengan YouTube API. Dapat mengakses video dan statistik.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0"><i class="fab fa-tiktok me-2"></i>TikTok Integration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="flex-grow-1">
+                                            <h6>Status Koneksi</h6>
+                                            <p class="text-success" id="tiktokStatus">
+                                                <i class="fas fa-check-circle me-1"></i>Terhubung
+                                            </p>
+                                        </div>
+                                        <button class="btn btn-outline-dark btn-sm" onclick="reconnectPlatform('tiktok')">
+                                            <i class="fas fa-sync-alt me-1"></i>Reconnect
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">TikTok Username</label>
+                                        <input type="text" class="form-control" value="@margajayabirdshop" readonly>
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Terhubung dengan TikTok API. Dapat mengakses video dan engagement.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Statistik Platform</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="platformChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Konfirmasi Hapus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Apakah Anda yakin ingin menghapus pengguna <strong id="deleteUserName"></strong>?</p>
+                    <p class="text-danger small"><i class="fas fa-exclamation-triangle me-1"></i>Tindakan ini tidak dapat dibatalkan.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let currentUser = null;
+        let deleteUserEmail = null;
+        let usersData = [];
+        
+        // Cek session
+        window.onload = function() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(user);
+            if (!currentUser.isAdmin) {
+                window.location.href = 'user-dashboard.html';
+                return;
+            }
+            
+            document.getElementById('adminName').textContent = currentUser.name || 'Admin';
+            loadUsers();
+            loadDashboardStats();
+        };
+        
+        // Show section
+        function showSection(section) {
+            document.querySelectorAll('[id$="-section"]').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            document.getElementById(section + '-section').style.display = 'block';
+            
+            // Update active nav
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.closest('.nav-link').classList.add('active');
+            
+            if (section === 'users') {
+                loadUsers();
+            } else if (section === 'dashboard') {
+                loadDashboardStats();
+            }
+        }
+        
+        // Load users
+        function loadUsers() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const currentUserEmail = currentUser.email;
+            usersData = users.filter(u => u.email !== currentUserEmail);
+            
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (usersData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">
+                            <i class="fas fa-info-circle me-2"></i>Belum ada pengguna terdaftar
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            usersData.forEach((user, index) => {
+                const platformIcons = [];
+                if (user.platforms?.youtube?.connected) {
+                    platformIcons.push('<i class="fab fa-youtube text-danger" title="YouTube Terhubung"></i>');
+                }
+                if (user.platforms?.tiktok?.connected) {
+                    platformIcons.push('<i class="fab fa-tiktok" title="TikTok Terhubung"></i>');
+                }
+                
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${user.name || '-'}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phone || '-'}</td>
+                        <td><span class="badge bg-secondary">User</span></td>
+                        <td>
+                            ${platformIcons.length ? platformIcons.join(' ') : '-'}
+                        </td>
+                        <td>${new Date(user.registeredAt).toLocaleDateString('id-ID')}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteModal('${user.email}', '${user.name}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            
+            // Load admin list
+            loadAdminList();
+        }
+        
+        // Load admin list
+        function loadAdminList() {
+            const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
+            const admins = allUsers.filter(u => u.role === 'admin' && u.email !== currentUser.email);
+            
+            const adminList = document.getElementById('adminList');
+            
+            if (admins.length === 0) {
+                adminList.innerHTML = '<p class="text-muted text-center">Belum ada admin lain</p>';
+                return;
+            }
+            
+            let html = '';
+            admins.forEach(admin => {
+                html += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${admin.name}</strong><br>
+                            <small class="text-muted">${admin.email}</small>
+                        </div>
+                        <span class="badge bg-primary">${admin.adminRole || 'Admin'}</span>
+                    </div>
+                `;
+            });
+            
+            adminList.innerHTML = html;
+        }
+        
+        // Load dashboard stats
+        function loadDashboardStats() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const admins = users.filter(u => u.role === 'admin');
+            
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('totalAdmins').textContent = admins.length;
+            
+            const youtubeUsers = users.filter(u => u.platforms?.youtube?.connected).length;
+            const tiktokUsers = users.filter(u => u.platforms?.tiktok?.connected).length;
+            
+            document.getElementById('youtubeUsers').textContent = youtubeUsers;
+            document.getElementById('tiktokUsers').textContent = tiktokUsers;
+            
+            // Load recent activities
+            const activities = [];
+            users.slice(-5).reverse().forEach(user => {
+                activities.push(`
+                    <tr>
+                        <td>${new Date(user.registeredAt).toLocaleString('id-ID')}</td>
+                        <td>${user.name || user.email}</td>
+                        <td>Pendaftaran akun baru</td>
+                        <td><span class="badge bg-success">Berhasil</span></td>
+                    </tr>
+                `);
+            });
+            
+            document.getElementById('recentActivities').innerHTML = activities.length ? 
+                activities.join('') : 
+                '<tr><td colspan="4" class="text-center text-muted">Belum ada aktivitas</td></tr>';
+        }
+        
+        // Show delete modal
+        function showDeleteModal(email, name) {
+            deleteUserEmail = email;
+            document.getElementById('deleteUserName').textContent = name;
+            new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+        }
+        
+        // Confirm delete user
+        function confirmDeleteUser() {
+            if (!deleteUserEmail) return;
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const updatedUsers = users.filter(u => u.email !== deleteUserEmail);
+            
+            localStorage.setItem('users', JSON.stringify(updatedUsers));
+            
+            bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+            loadUsers();
+            loadDashboardStats();
+            
+            // Show success message
+            const alert = document.getElementById('addAdminAlert');
+            alert.className = 'alert alert-success';
+            alert.innerHTML = '<i class="fas fa-check-circle me-2"></i>Pengguna berhasil dihapus';
+            alert.classList.remove('d-none');
+            
+            setTimeout(() => alert.classList.add('d-none'), 3000);
+        }
+        
+        // Add admin form
+        document.getElementById('addAdminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('adminName').value;
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const confirmPassword = document.getElementById('adminConfirmPassword').value;
+            const role = document.getElementById('adminRole').value;
+            const alert = document.getElementById('addAdminAlert');
+            
+            // Validasi
+            if (password !== confirmPassword) {
+                alert.className = 'alert alert-danger';
+                alert.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Password tidak cocok!';
+                alert.classList.remove('d-none');
+                return;
+            }
+            
+            if (password.length < 8) {
+                alert.className = 'alert alert-danger';
+                alert.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Password minimal 8 karakter!';
+                alert.classList.remove('d-none');
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Cek email sudah terdaftar
+            if (users.some(u => u.email === email)) {
+                alert.className = 'alert alert-danger';
+                alert.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Email sudah terdaftar!';
+                alert.classList.remove('d-none');
+                return;
+            }
+            
+            // Tambah admin baru
+            const newAdmin = {
+                name: name,
+                email: email,
+                password: password,
+                role: 'admin',
+                adminRole: role,
+                platforms: {
+                    youtube: { connected: true },
+                    tiktok: { connected: true }
+                },
+                registeredAt: new Date().toISOString()
+            };
+            
+            users.push(newAdmin);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // Reset form
+            this.reset();
+            
+            alert.className = 'alert alert-success';
+            alert.innerHTML = '<i class="fas fa-check-circle me-2"></i>Admin baru berhasil ditambahkan!';
+            alert.classList.remove('d-none');
+            
+            loadAdminList();
+            loadUsers();
+            loadDashboardStats();
+            
+            setTimeout(() => alert.classList.add('d-none'), 3000);
+        });
+        
+        // Reconnect platform
+        function reconnectPlatform(platform) {
+            const alert = document.getElementById('addAdminAlert');
+            alert.className = 'alert alert-info';
+            alert.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Mencoba menghubungkan kembali ke ${platform}...`;
+            alert.classList.remove('d-none');
+            
+            setTimeout(() => {
+                alert.className = 'alert alert-success';
+                alert.innerHTML = `<i class="fas fa-check-circle me-2"></i>Berhasil terhubung kembali ke ${platform}!`;
+                
+                setTimeout(() => alert.classList.add('d-none'), 3000);
+            }, 2000);
+        }
+        
+        // Logout
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = '../auth/login.html';
+        }
+        
+        // Search user
+        document.getElementById('searchUser')?.addEventListener('input', function(e) {
+            const search = e.target.value.toLowerCase();
+            const filtered = usersData.filter(user => 
+                (user.name || '').toLowerCase().includes(search) ||
+                user.email.toLowerCase().includes(search) ||
+                (user.phone || '').includes(search)
+            );
+            
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">
+                            <i class="fas fa-info-circle me-2"></i>Tidak ada pengguna yang cocok
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            filtered.forEach((user, index) => {
+                const platformIcons = [];
+                if (user.platforms?.youtube?.connected) {
+                    platformIcons.push('<i class="fab fa-youtube text-danger" title="YouTube Terhubung"></i>');
+                }
+                if (user.platforms?.tiktok?.connected) {
+                    platformIcons.push('<i class="fab fa-tiktok" title="TikTok Terhubung"></i>');
+                }
+                
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${user.name || '-'}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phone || '-'}</td>
+                        <td><span class="badge bg-secondary">User</span></td>
+                        <td>
+                            ${platformIcons.length ? platformIcons.join(' ') : '-'}
+                        </td>
+                        <td>${new Date(user.registeredAt).toLocaleDateString('id-ID')}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteModal('${user.email}', '${user.name}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        });
+    </script>
+</body>
+</html>
