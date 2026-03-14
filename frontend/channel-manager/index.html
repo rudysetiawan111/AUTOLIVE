@@ -1,23 +1,411 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Channel Manager</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Channel Manager - Manajemen Channel YouTube</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <h1>Channel Manager</h1>
-  <ul id="channel-list"></ul>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="../index.html">
+                    <i class="fas fa-video"></i> YouTube Channel Manager
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="../index.html"><i class="fas fa-home"></i> Beranda</a></li>
+                <li><a href="index.html" class="active"><i class="fas fa-tv"></i> Channel Manager</a></li>
+                <li><a href="../content-planner/index.html"><i class="fas fa-calendar-alt"></i> Content Planner</a></li>
+                <li><a href="../analytics/index.html"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                <li><a href="../settings/index.html"><i class="fas fa-cog"></i> Pengaturan</a></li>
+            </ul>
+            <div class="nav-profile">
+                <img src="https://via.placeholder.com/40" alt="Profile">
+                <span>John Doe</span>
+            </div>
+        </div>
+    </nav>
 
-  <script>
-    const channels = [
-      { name: 'YouTube Channel 1', platform: 'YouTube' },
-      { name: 'TikTok User Demo', platform: 'TikTok' }
-    ];
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-tv"></i> Manajemen Channel</h1>
+            <button class="btn btn-primary" onclick="showAddChannelModal()">
+                <i class="fas fa-plus"></i> Tambah Channel
+            </button>
+        </div>
 
-    const list = document.getElementById('channel-list');
-    channels.forEach(c => {
-      list.innerHTML += `<li>[${c.platform}] ${c.name}</li>`;
-    });
-  </script>
+        <!-- Channel Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-tv stat-icon"></i>
+                <div class="stat-info">
+                    <h3>Total Channel</h3>
+                    <p id="totalChannels">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-users stat-icon"></i>
+                <div class="stat-info">
+                    <h3>Total Subscribers</h3>
+                    <p id="totalSubscribers">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-eye stat-icon"></i>
+                <div class="stat-info">
+                    <h3>Total Views</h3>
+                    <p id="totalViews">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-video stat-icon"></i>
+                <div class="stat-info">
+                    <h3>Total Videos</h3>
+                    <p id="totalVideos">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channel List -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Daftar Channel</h3>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchChannel" placeholder="Cari channel...">
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="channelList" class="channel-grid">
+                    <!-- Channel cards akan ditampilkan di sini -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah/Edit Channel -->
+    <div id="channelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Tambah Channel Baru</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="channelForm" onsubmit="saveChannel(event)">
+                    <input type="hidden" id="channelId">
+                    
+                    <div class="form-group">
+                        <label for="channelName">Nama Channel <span class="required">*</span></label>
+                        <input type="text" id="channelName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="channelDescription">Deskripsi</label>
+                        <textarea id="channelDescription" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="channelUrl">URL Channel</label>
+                        <input type="url" id="channelUrl" placeholder="https://youtube.com/c/...">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subscriberCount">Subscribers</label>
+                            <input type="number" id="subscriberCount" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="videoCount">Jumlah Video</label>
+                            <input type="number" id="videoCount" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="totalViews">Total Views</label>
+                            <input type="number" id="totalViews" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Kategori</label>
+                            <select id="category">
+                                <option value="Pendidikan">Pendidikan</option>
+                                <option value="Hiburan">Hiburan</option>
+                                <option value="Gaming">Gaming</option>
+                                <option value="Musik">Musik</option>
+                                <option value="Vlog">Vlog</option>
+                                <option value="Teknologi">Teknologi</option>
+                                <option value="Kuliner">Kuliner</option>
+                                <option value="Olahraga">Olahraga</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="channelStatus">Status</label>
+                        <select id="channelStatus">
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Tidak Aktif</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="thumbnail">Thumbnail Channel</label>
+                        <input type="file" id="thumbnail" accept="image/*">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Hapus Channel -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Konfirmasi Hapus</h2>
+                <span class="close" onclick="closeDeleteModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menghapus channel <span id="deleteChannelName"></span>?</p>
+                <p class="text-warning">Tindakan ini tidak dapat dibatalkan!</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Data dummy untuk contoh
+        let channels = [
+            {
+                id: 1,
+                name: "Tech Reviews Indonesia",
+                description: "Review gadget dan teknologi terbaru",
+                url: "https://youtube.com/@techreviewsid",
+                subscribers: 150000,
+                videos: 350,
+                views: 5000000,
+                category: "Teknologi",
+                status: "active",
+                thumbnail: "https://via.placeholder.com/300x150"
+            },
+            {
+                id: 2,
+                name: "Cooking with Anna",
+                description: "Resep masakan Indonesia dan internasional",
+                url: "https://youtube.com/@cookingwithanna",
+                subscribers: 89000,
+                videos: 210,
+                views: 3200000,
+                category: "Kuliner",
+                status: "active",
+                thumbnail: "https://via.placeholder.com/300x150"
+            },
+            {
+                id: 3,
+                name: "Gaming Pro",
+                description: "Gameplay dan tips gaming",
+                url: "https://youtube.com/@gamingpro",
+                subscribers: 450000,
+                videos: 890,
+                views: 15000000,
+                category: "Gaming",
+                status: "active",
+                thumbnail: "https://via.placeholder.com/300x150"
+            }
+        ];
+
+        let channelToDelete = null;
+
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            displayChannels();
+        });
+
+        // Tampilkan daftar channel
+        function displayChannels() {
+            const channelList = document.getElementById('channelList');
+            const searchTerm = document.getElementById('searchChannel')?.value.toLowerCase() || '';
+            
+            let filteredChannels = channels;
+            if (searchTerm) {
+                filteredChannels = channels.filter(channel => 
+                    channel.name.toLowerCase().includes(searchTerm) ||
+                    channel.category.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filteredChannels.length === 0) {
+                channelList.innerHTML = '<div class="no-data">Tidak ada channel ditemukan</div>';
+                return;
+            }
+
+            channelList.innerHTML = filteredChannels.map(channel => `
+                <div class="channel-card">
+                    <img src="${channel.thumbnail}" alt="${channel.name}" class="channel-thumbnail">
+                    <div class="channel-info">
+                        <h4>${channel.name}</h4>
+                        <p class="channel-category">${channel.category}</p>
+                        <p class="channel-description">${channel.description.substring(0, 60)}...</p>
+                        <div class="channel-stats">
+                            <span><i class="fas fa-users"></i> ${formatNumber(channel.subscribers)}</span>
+                            <span><i class="fas fa-eye"></i> ${formatNumber(channel.views)}</span>
+                            <span><i class="fas fa-video"></i> ${channel.videos}</span>
+                        </div>
+                        <div class="channel-status">
+                            <span class="status-badge status-${channel.status}">
+                                ${channel.status === 'active' ? 'Aktif' : channel.status === 'inactive' ? 'Tidak Aktif' : 'Pending'}
+                            </span>
+                        </div>
+                        <div class="channel-actions">
+                            <button class="btn-icon" onclick="editChannel(${channel.id})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon" onclick="showDeleteModal(${channel.id}, '${channel.name}')" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <a href="${channel.url}" target="_blank" class="btn-icon" title="Kunjungi Channel">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Format angka
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // Update statistik
+        function updateStats() {
+            document.getElementById('totalChannels').textContent = channels.length;
+            
+            const totalSubs = channels.reduce((sum, channel) => sum + channel.subscribers, 0);
+            document.getElementById('totalSubscribers').textContent = formatNumber(totalSubs);
+            
+            const totalViews = channels.reduce((sum, channel) => sum + channel.views, 0);
+            document.getElementById('totalViews').textContent = formatNumber(totalViews);
+            
+            const totalVideos = channels.reduce((sum, channel) => sum + channel.videos, 0);
+            document.getElementById('totalVideos').textContent = formatNumber(totalVideos);
+        }
+
+        // Search functionality
+        document.getElementById('searchChannel')?.addEventListener('input', displayChannels);
+
+        // Modal functions
+        function showAddChannelModal() {
+            document.getElementById('modalTitle').textContent = 'Tambah Channel Baru';
+            document.getElementById('channelForm').reset();
+            document.getElementById('channelId').value = '';
+            document.getElementById('channelModal').style.display = 'block';
+        }
+
+        function editChannel(id) {
+            const channel = channels.find(c => c.id === id);
+            if (!channel) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Channel';
+            document.getElementById('channelId').value = channel.id;
+            document.getElementById('channelName').value = channel.name;
+            document.getElementById('channelDescription').value = channel.description;
+            document.getElementById('channelUrl').value = channel.url;
+            document.getElementById('subscriberCount').value = channel.subscribers;
+            document.getElementById('videoCount').value = channel.videos;
+            document.getElementById('totalViews').value = channel.views;
+            document.getElementById('category').value = channel.category;
+            document.getElementById('channelStatus').value = channel.status;
+
+            document.getElementById('channelModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('channelModal').style.display = 'none';
+        }
+
+        function showDeleteModal(id, name) {
+            channelToDelete = id;
+            document.getElementById('deleteChannelName').textContent = name;
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            channelToDelete = null;
+        }
+
+        function confirmDelete() {
+            if (channelToDelete) {
+                channels = channels.filter(c => c.id !== channelToDelete);
+                updateStats();
+                displayChannels();
+                closeDeleteModal();
+            }
+        }
+
+        // Save channel
+        function saveChannel(event) {
+            event.preventDefault();
+
+            const channelData = {
+                id: document.getElementById('channelId').value || Date.now(),
+                name: document.getElementById('channelName').value,
+                description: document.getElementById('channelDescription').value,
+                url: document.getElementById('channelUrl').value,
+                subscribers: parseInt(document.getElementById('subscriberCount').value) || 0,
+                videos: parseInt(document.getElementById('videoCount').value) || 0,
+                views: parseInt(document.getElementById('totalViews').value) || 0,
+                category: document.getElementById('category').value,
+                status: document.getElementById('channelStatus').value,
+                thumbnail: "https://via.placeholder.com/300x150" // Default thumbnail
+            };
+
+            const existingIndex = channels.findIndex(c => c.id == channelData.id);
+            if (existingIndex >= 0) {
+                channels[existingIndex] = channelData;
+            } else {
+                channels.push(channelData);
+            }
+
+            updateStats();
+            displayChannels();
+            closeModal();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('channelModal');
+            const deleteModal = document.getElementById('deleteModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+            if (event.target == deleteModal) {
+                closeDeleteModal();
+            }
+        }
+    </script>
 </body>
 </html>
