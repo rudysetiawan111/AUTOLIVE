@@ -1,23 +1,1149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Viral Discovery</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viral Discovery - Marga Jaya Bird Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Navbar Styles */
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .navbar-brand i {
+            margin-right: 10px;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            padding: 8px 15px !important;
+            margin: 0 5px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            color: white !important;
+        }
+
+        .nav-link.active {
+            background: rgba(255,255,255,0.3);
+            color: white !important;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            padding: 60px 0;
+            margin-bottom: 40px;
+            border-radius: 0 0 50px 50px;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: #6c757d;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: white;
+            border-radius: 50px;
+            padding: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: -30px auto 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-input {
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            width: 100%;
+            border-radius: 50px;
+            outline: none;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 40px;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter-btn {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            padding: 12px 20px;
+            border-radius: 40px;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Category Pills */
+        .category-pills {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 20px 0;
+            scrollbar-width: thin;
+        }
+
+        .category-pills::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .category-pills::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .category-pill {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 500;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .category-pill:hover, .category-pill.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Trending Topics */
+        .trending-topics {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .trending-topic-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .trending-topic-item:last-child {
+            border-bottom: none;
+        }
+
+        .trending-topic-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .trending-rank {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary)20, var(--secondary)20);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--primary);
+            margin-right: 15px;
+        }
+
+        .trending-info h6 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .trending-info small {
+            color: #6c757d;
+        }
+
+        .trending-stats {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .trending-growth {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* Content Cards */
+        .content-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            height: 100%;
+            position: relative;
+        }
+
+        .content-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .content-card.viral::before {
+            content: '🔥 VIRAL';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 2;
+            box-shadow: 0 3px 10px rgba(255, 71, 87, 0.3);
+        }
+
+        .content-media {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+        }
+
+        .content-media img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .content-card:hover .content-media img {
+            transform: scale(1.1);
+        }
+
+        .content-platform {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 2;
+        }
+
+        .content-platform i {
+            font-size: 14px;
+        }
+
+        .content-body {
+            padding: 20px;
+        }
+
+        .content-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .content-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .content-meta i {
+            margin-right: 5px;
+        }
+
+        .content-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .stat-item i {
+            color: var(--primary);
+        }
+
+        .growth-badge {
+            background: #28a74520;
+            color: var(--success);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Hashtag Cloud */
+        .hashtag-cloud {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+
+        .hashtag-item {
+            display: inline-block;
+            background: #f8f9fa;
+            padding: 8px 18px;
+            border-radius: 30px;
+            margin: 5px;
+            font-size: 14px;
+            color: #6c757d;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .hashtag-item:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .hashtag-item.large {
+            font-size: 20px;
+            padding: 12px 25px;
+        }
+
+        .hashtag-item.medium {
+            font-size: 16px;
+        }
+
+        /* Insight Cards */
+        .insight-card {
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            border-radius: 20px;
+            padding: 25px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .insight-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        /* Time Filter */
+        .time-filter {
+            background: white;
+            border-radius: 40px;
+            padding: 5px;
+            display: inline-flex;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .time-option {
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .time-option:hover {
+            background: #f8f9fa;
+        }
+
+        .time-option.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        /* Load More Button */
+        .load-more-btn {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 15px 50px;
+            border-radius: 40px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .load-more-btn:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 36px;
+            }
+            
+            .search-section {
+                border-radius: 20px;
+                padding: 15px;
+            }
+            
+            .search-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .time-filter {
+                display: flex;
+                width: 100%;
+            }
+            
+            .time-option {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Viral Discovery</h1>
-  <ul id="viral-list"></ul>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-dove"></i>
+                Marga Jaya Bird Shop
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../dashboard/admin-dashboard.html">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../dashboard/analytics.html">
+                            <i class="fas fa-chart-line me-1"></i>Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="fas fa-fire me-1"></i>Viral Discovery
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../content/index.html">
+                            <i class="fas fa-video me-1"></i>Content
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../content/scheduler.html">
+                            <i class="fas fa-calendar me-1"></i>Scheduler
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="dropdown ms-3">
+                    <div class="user-avatar dropdown-toggle" data-bs-toggle="dropdown" id="userAvatar">
+                        A
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="../profile/index.html"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="../settings/index.html"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-  <script>
-    const viral = [
-      { title: 'Trending TikTok Dance', platform: 'TikTok', views: 45678 },
-      { title: 'Popular YouTube Video', platform: 'YouTube', views: 32000 }
-    ];
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="hero-title">
+                <i class="fas fa-fire me-3"></i>Viral Discovery
+            </h1>
+            <p class="hero-subtitle">
+                Temukan trending content, hashtags, dan insights untuk memaksimalkan engagement 
+                di YouTube dan TikTok
+            </p>
+        </div>
+    </section>
 
-    const list = document.getElementById('viral-list');
-    viral.forEach(v => {
-      list.innerHTML += `<li>[${v.platform}] ${v.title} - Views: ${v.views}</li>`;
-    });
-  </script>
+    <!-- Search Section -->
+    <div class="container">
+        <div class="search-section">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6">
+                    <input type="text" class="search-input" placeholder="Cari trending topics, hashtags, atau keywords..." id="searchInput">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select border-0 bg-light" id="platformFilter">
+                        <option value="all">Semua Platform</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="tiktok">TikTok</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="search-btn w-100" onclick="searchContent()">
+                        <i class="fas fa-search me-2"></i>Discover
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Filter -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="time-filter">
+                <span class="time-option active" onclick="filterTime('day')">Today</span>
+                <span class="time-option" onclick="filterTime('week')">This Week</span>
+                <span class="time-option" onclick="filterTime('month')">This Month</span>
+                <span class="time-option" onclick="filterTime('year')">This Year</span>
+            </div>
+            
+            <button class="filter-btn" onclick="openAdvancedFilter()">
+                <i class="fas fa-sliders-h me-2"></i>Advanced Filter
+            </button>
+        </div>
+
+        <!-- Category Pills -->
+        <div class="category-pills mb-4">
+            <span class="category-pill active" onclick="filterCategory('all')">All</span>
+            <span class="category-pill" onclick="filterCategory('birds')">🐦 Burung</span>
+            <span class="category-pill" onclick="filterCategory('care')">🏥 Perawatan</span>
+            <span class="category-pill" onclick="filterCategory('food')">🍎 Pakan</span>
+            <span class="category-pill" onclick="filterCategory('cage')">🏠 Kandang</span>
+            <span class="category-pill" onclick="filterCategory('training')">🎯 Training</span>
+            <span class="category-pill" onclick="filterCategory('sound')">🎵 Suara Burung</span>
+            <span class="category-pill" onclick="filterCategory('breeding')">🥚 Breeding</span>
+            <span class="category-pill" onclick="filterCategory('health')">💊 Kesehatan</span>
+        </div>
+
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <!-- Trending Topics -->
+                <div class="trending-topics">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line text-primary me-2"></i>
+                            Trending Topics 🔥
+                        </h5>
+                        <a href="#" class="text-primary">View All <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                    
+                    <div id="trendingTopicsList">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Viral Content Grid -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>
+                        <i class="fas fa-video text-primary me-2"></i>
+                        Viral Content Today
+                    </h5>
+                    <span class="text-muted">Updated 5 minutes ago</span>
+                </div>
+
+                <div class="row" id="viralContentGrid">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <!-- Load More -->
+                <div class="text-center mt-4 mb-5">
+                    <button class="load-more-btn" onclick="loadMoreContent()">
+                        <i class="fas fa-sync-alt me-2"></i>Load More Content
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Trending Hashtags -->
+                <div class="hashtag-cloud mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-hashtag text-primary me-2"></i>
+                        Trending Hashtags
+                    </h5>
+                    <div id="hashtagCloud">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Viral Insights -->
+                <div class="insight-card">
+                    <div class="insight-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h6>Viral Insights</h6>
+                    <p class="small text-muted mb-3">
+                        Analisis real-time tentang konten yang sedang viral
+                    </p>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">YouTube Virality Score</span>
+                            <span class="small fw-bold">85%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-danger" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small">TikTok Virality Score</span>
+                            <span class="small fw-bold">92%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-dark" style="width: 92%"></div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Average Engagement</span>
+                        <span class="small fw-bold text-success">+15.8%</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Content Velocity</span>
+                        <span class="small fw-bold text-success">+23.4%</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="small">Best Time to Post</span>
+                        <span class="small fw-bold">19:00 - 21:00</span>
+                    </div>
+                </div>
+
+                <!-- Recommended Topics -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">
+                            <i class="fas fa-lightbulb text-warning me-2"></i>
+                            Recommended Topics
+                        </h6>
+                        
+                        <div class="list-group list-group-flush" id="recommendedTopics">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Advanced Filter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filterForm">
+                        <div class="mb-3">
+                            <label class="form-label">Platform</label>
+                            <select class="form-select" id="filterPlatform">
+                                <option value="all">All Platforms</option>
+                                <option value="youtube">YouTube</option>
+                                <option value="tiktok">TikTok</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Min Views</label>
+                            <input type="number" class="form-control" id="filterMinViews" placeholder="e.g., 10000">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="filterCategory">
+                                <option value="all">All Categories</option>
+                                <option value="birds">Burung</option>
+                                <option value="care">Perawatan</option>
+                                <option value="food">Pakan</option>
+                                <option value="cage">Kandang</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Time Range</label>
+                            <select class="form-select" id="filterTimeRange">
+                                <option value="24h">Last 24 Hours</option>
+                                <option value="7d">Last 7 Days</option>
+                                <option value="30d">Last 30 Days</option>
+                                <option value="90d">Last 90 Days</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Sort By</label>
+                            <select class="form-select" id="filterSortBy">
+                                <option value="trending">Trending</option>
+                                <option value="views">Most Views</option>
+                                <option value="engagement">Highest Engagement</option>
+                                <option value="recent">Most Recent</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="applyFilter()">Apply Filter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sample data
+        const sampleContent = [
+            {
+                id: 1,
+                title: "Cara Merawat Lovebird Agar Cepat Gacor",
+                platform: "youtube",
+                thumbnail: "https://via.placeholder.com/400x225/ff0000/ffffff?text=Lovebird+Tutorial",
+                views: "1.2M",
+                likes: "245K",
+                comments: "12.5K",
+                shares: "45K",
+                growth: "+45%",
+                category: "birds",
+                viral: true,
+                author: "BirdLovers ID",
+                timeAgo: "2 jam yang lalu"
+            },
+            {
+                id: 2,
+                title: "Trik Membuat Kandang Burung Minimalis",
+                platform: "tiktok",
+                thumbnail: "https://via.placeholder.com/400x225/000000/ffffff?text=Kandang+Minimalis",
+                views: "856K",
+                likes: "98K",
+                comments: "5.2K",
+                shares: "23K",
+                growth: "+32%",
+                category: "cage",
+                viral: true,
+                author: "DIY Bird Cage",
+                timeAgo: "5 jam yang lalu"
+            },
+            {
+                id: 3,
+                title: "Suara Burung Masteran Untuk Memancing Bunyi",
+                platform: "youtube",
+                thumbnail: "https://via.placeholder.com/400x225/ff0000/ffffff?text=Suara+Masteran",
+                views: "2.1M",
+                likes: "312K",
+                comments: "18.3K",
+                shares: "67K",
+                growth: "+67%",
+                category: "sound",
+                viral: true,
+                author: "Suara Burung ID",
+                timeAgo: "8 jam yang lalu"
+            },
+            {
+                id: 4,
+                title: "Review Pakan Burung Terbaik 2026",
+                platform: "tiktok",
+                thumbnail: "https://via.placeholder.com/400x225/000000/ffffff?text=Review+Pakan",
+                views: "654K",
+                likes: "76K",
+                comments: "3.8K",
+                shares: "15K",
+                growth: "+28%",
+                category: "food",
+                viral: false,
+                author: "Bird Food Review",
+                timeAgo: "12 jam yang lalu"
+            },
+            {
+                id: 5,
+                title: "Tips Melatih Burung Kicau Untuk Lomba",
+                platform: "youtube",
+                thumbnail: "https://via.placeholder.com/400x225/ff0000/ffffff?text=Training+Lomba",
+                views: "987K",
+                likes: "156K",
+                comments: "8.9K",
+                shares: "34K",
+                growth: "+52%",
+                category: "training",
+                viral: true,
+                author: "Kicau Mania",
+                timeAgo: "1 hari yang lalu"
+            },
+            {
+                id: 6,
+                title: "Cara Mengobati Burung Sakit Secara Alami",
+                platform: "tiktok",
+                thumbnail: "https://via.placeholder.com/400x225/000000/ffffff?text=Pengobatan+Alami",
+                views: "1.5M",
+                likes: "189K",
+                comments: "15.2K",
+                shares: "78K",
+                growth: "+89%",
+                category: "health",
+                viral: true,
+                author: "Bird Health Care",
+                timeAgo: "1 hari yang lalu"
+            }
+        ];
+
+        const trendingTopics = [
+            { rank: 1, topic: "Lovebird Gacor", views: "2.1M", growth: "+45%", category: "birds" },
+            { rank: 2, topic: "Kandang Burung Minimalis", views: "1.8M", growth: "+32%", category: "cage" },
+            { rank: 3, topic: "Pakan Organik", views: "1.5M", growth: "+28%", category: "food" },
+            { rank: 4, topic: "Suara Masteran", views: "1.2M", growth: "+67%", category: "sound" },
+            { rank: 5, topic: "Burung Langka", views: "980K", growth: "+23%", category: "birds" }
+        ];
+
+        const trendingHashtags = [
+            { tag: "birdlovers", size: "large", posts: "125K" },
+            { tag: "kicauburung", size: "large", posts: "98K" },
+            { tag: "lovebirdindonesia", size: "medium", posts: "87K" },
+            { tag: "burungindonesia", size: "large", posts: "156K" },
+            { tag: "birdcare", size: "small", posts: "45K" },
+            { tag: "pakanburung", size: "medium", posts: "67K" },
+            { tag: "kandangburung", size: "small", posts: "34K" },
+            { tag: "birdtraining", size: "medium", posts: "78K" }
+        ];
+
+        const recommendedTopics = [
+            { topic: "Cara merawat anakan lovebird", engagement: "+89%" },
+            { topic: "Mix pakan burung kicau", engagement: "+76%" },
+            { topic: "Desain kandang outdoor", engagement: "+67%" },
+            { topic: "Suara burung untuk masteran", engagement: "+92%" },
+            { topic: "Tips memilih burung berkualitas", engagement: "+54%" }
+        ];
+
+        let currentFilter = {
+            platform: 'all',
+            category: 'all',
+            timeRange: 'day'
+        };
+
+        window.onload = function() {
+            // Check authentication
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Load all content
+            loadTrendingTopics();
+            loadViralContent();
+            loadHashtagCloud();
+            loadRecommendedTopics();
+            
+            // Set user avatar
+            const userData = JSON.parse(user);
+            document.getElementById('userAvatar').textContent = userData.name ? userData.name.charAt(0).toUpperCase() : 'A';
+        };
+
+        function loadTrendingTopics() {
+            const container = document.getElementById('trendingTopicsList');
+            container.innerHTML = '';
+            
+            trendingTopics.forEach(topic => {
+                container.innerHTML += `
+                    <div class="trending-topic-item" onclick="searchTopic('${topic.topic}')">
+                        <div class="trending-rank">#${topic.rank}</div>
+                        <div class="trending-info">
+                            <h6>${topic.topic}</h6>
+                            <small>${topic.views} views</small>
+                        </div>
+                        <div class="trending-stats">
+                            <span class="trending-growth">${topic.growth}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function loadViralContent() {
+            const container = document.getElementById('viralContentGrid');
+            container.innerHTML = '';
+            
+            sampleContent.forEach(content => {
+                container.innerHTML += `
+                    <div class="col-md-6 mb-4">
+                        <div class="content-card ${content.viral ? 'viral' : ''}">
+                            <div class="content-media">
+                                <img src="${content.thumbnail}" alt="${content.title}">
+                                <div class="content-platform">
+                                    <i class="fab fa-${content.platform}"></i>
+                                    ${content.platform === 'youtube' ? 'YouTube' : 'TikTok'}
+                                </div>
+                            </div>
+                            <div class="content-body">
+                                <h6 class="content-title">${content.title}</h6>
+                                <div class="content-meta">
+                                    <span><i class="fas fa-user"></i> ${content.author}</span>
+                                    <span><i class="far fa-clock"></i> ${content.timeAgo}</span>
+                                </div>
+                                <div class="content-stats">
+                                    <span class="stat-item"><i class="fas fa-eye"></i> ${content.views}</span>
+                                    <span class="stat-item"><i class="fas fa-heart"></i> ${content.likes}</span>
+                                    <span class="stat-item"><i class="fas fa-comment"></i> ${content.comments}</span>
+                                    <span class="growth-badge ms-auto">${content.growth}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function loadHashtagCloud() {
+            const container = document.getElementById('hashtagCloud');
+            container.innerHTML = '';
+            
+            trendingHashtags.forEach(item => {
+                container.innerHTML += `
+                    <span class="hashtag-item ${item.size}" onclick="searchHashtag('${item.tag}')">
+                        #${item.tag} <small class="ms-1">(${item.posts})</small>
+                    </span>
+                `;
+            });
+        }
+
+        function loadRecommendedTopics() {
+            const container = document.getElementById('recommendedTopics');
+            container.innerHTML = '';
+            
+            recommendedTopics.forEach(item => {
+                container.innerHTML += `
+                    <div class="list-group-item border-0 px-0" onclick="searchTopic('${item.topic}')" style="cursor: pointer;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>${item.topic}</span>
+                            <span class="text-success small">${item.engagement}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function searchContent() {
+            const query = document.getElementById('searchInput').value;
+            const platform = document.getElementById('platformFilter').value;
+            
+            if (query) {
+                alert(`Mencari: "${query}" di ${platform === 'all' ? 'semua platform' : platform}`);
+                // In real app, would fetch from API
+            }
+        }
+
+        function searchTopic(topic) {
+            document.getElementById('searchInput').value = topic;
+            searchContent();
+        }
+
+        function searchHashtag(hashtag) {
+            document.getElementById('searchInput').value = '#' + hashtag;
+            searchContent();
+        }
+
+        function filterTime(range) {
+            // Update active state
+            document.querySelectorAll('.time-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFilter.timeRange = range;
+            
+            // In real app, would fetch filtered data
+            alert(`Filtering content for: ${range}`);
+        }
+
+        function filterCategory(category) {
+            // Update active state
+            document.querySelectorAll('.category-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFilter.category = category;
+            
+            // Filter content
+            const filteredContent = category === 'all' 
+                ? sampleContent 
+                : sampleContent.filter(c => c.category === category);
+            
+            // Update grid (simplified for demo)
+            const container = document.getElementById('viralContentGrid');
+            container.innerHTML = '';
+            
+            filteredContent.forEach(content => {
+                container.innerHTML += `
+                    <div class="col-md-6 mb-4">
+                        <div class="content-card ${content.viral ? 'viral' : ''}">
+                            <div class="content-media">
+                                <img src="${content.thumbnail}" alt="${content.title}">
+                                <div class="content-platform">
+                                    <i class="fab fa-${content.platform}"></i>
+                                    ${content.platform === 'youtube' ? 'YouTube' : 'TikTok'}
+                                </div>
+                            </div>
+                            <div class="content-body">
+                                <h6 class="content-title">${content.title}</h6>
+                                <div class="content-meta">
+                                    <span><i class="fas fa-user"></i> ${content.author}</span>
+                                    <span><i class="far fa-clock"></i> ${content.timeAgo}</span>
+                                </div>
+                                <div class="content-stats">
+                                    <span class="stat-item"><i class="fas fa-eye"></i> ${content.views}</span>
+                                    <span class="stat-item"><i class="fas fa-heart"></i> ${content.likes}</span>
+                                    <span class="stat-item"><i class="fas fa-comment"></i> ${content.comments}</span>
+                                    <span class="growth-badge ms-auto">${content.growth}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openAdvancedFilter() {
+            const modal = new bootstrap.Modal(document.getElementById('filterModal'));
+            modal.show();
+        }
+
+        function applyFilter() {
+            const platform = document.getElementById('filterPlatform').value;
+            const minViews = document.getElementById('filterMinViews').value;
+            const category = document.getElementById('filterCategory').value;
+            const timeRange = document.getElementById('filterTimeRange').value;
+            const sortBy = document.getElementById('filterSortBy').value;
+            
+            alert(`Applying filters:\nPlatform: ${platform}\nMin Views: ${minViews}\nCategory: ${category}\nTime Range: ${timeRange}\nSort By: ${sortBy}`);
+            
+            bootstrap.Modal.getInstance(document.getElementById('filterModal')).hide();
+        }
+
+        function loadMoreContent() {
+            alert('Loading more content... (Demo: Will fetch from API in production)');
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '../auth/login.html';
+        }
+
+        // Auto-refresh data every 5 minutes
+        setInterval(() => {
+            if (localStorage.getItem('user')) {
+                loadTrendingTopics();
+                loadViralContent();
+                loadHashtagCloud();
+            }
+        }, 300000);
+    </script>
 </body>
 </html>
