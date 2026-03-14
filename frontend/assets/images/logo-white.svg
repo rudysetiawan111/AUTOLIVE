@@ -1,0 +1,19 @@
+<svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#667eea"/>
+            <stop offset="100%" stop-color="#764ba2"/>
+        </linearGradient>
+    </defs>
+    
+    <!-- Icon -->
+    <rect x="10" y="10" width="30" height="30" rx="8" fill="url(#gradient)"/>
+    <path d="M20 20L30 25L20 30V20Z" fill="white"/>
+    
+    <!-- Text -->
+    <text x="50" y="32" font-family="Arial" font-weight="bold" font-size="24" fill="white">Auto</text>
+    <text x="110" y="32" font-family="Arial" font-weight="bold" font-size="24" fill="url(#gradient)">Live</text>
+    
+    <!-- Tagline -->
+    <text x="50" y="45" font-family="Arial" font-size="10" fill="#ccc">Automation & Viral Platform</text>
+</svg>
