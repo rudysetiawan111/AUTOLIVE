@@ -1,4 +1,22 @@
+// backend/server.js
 const express = require('express');
+const config = require('./config/environment');
+const app = require('./app');
+
+const server = app.listen(config.PORT, () => {
+  console.log(`Server running in ${config.NODE_ENV} mode on port ${config.PORT}`);
+  console.log(`API URL: ${config.API_URL}`);
+  console.log(`Frontend URL: ${config.FRONTEND_URL}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+  });
+});
+
 const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
