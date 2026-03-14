@@ -1,11 +1,2363 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Automation App Builder</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automation App Builder - Create Workflows Visually</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-bg: #1f2937;
+            --light-bg: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--light-bg);
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+
+        /* App Container */
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-md);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .sidebar-header h1 {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: white;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Component Categories */
+        .component-category {
+            margin-bottom: 24px;
+        }
+
+        .category-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .component-item {
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: move;
+            transition: all 0.2s;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .component-item:hover {
+            background: white;
+            border-color: var(--primary-color);
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .component-icon {
+            width: 36px;
+            height: 36px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .component-info {
+            flex: 1;
+        }
+
+        .component-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .component-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--light-bg);
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: white;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            padding: 0 12px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .tool-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .tool-btn:hover {
+            background: var(--light-bg);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .tool-btn.primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .tool-btn.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .tool-btn.danger:hover {
+            background: var(--danger-color);
+            border-color: var(--danger-color);
+            color: white;
+        }
+
+        .workflow-name {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--light-bg);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .workflow-name input {
+            border: none;
+            background: none;
+            padding: 6px;
+            font-size: 14px;
+            width: 200px;
+            outline: none;
+        }
+
+        /* Canvas Container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            background: #f3f4f6;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        #automationCanvas {
+            display: block;
+            background: white;
+            box-shadow: var(--shadow-lg);
+            margin: 40px auto;
+            border-radius: 12px;
+        }
+
+        /* Right Panel */
+        .right-panel {
+            width: 320px;
+            background: white;
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-md);
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--light-bg);
+        }
+
+        .panel-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Property Editor */
+        .property-section {
+            margin-bottom: 24px;
+        }
+
+        .property-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .property-group {
+            margin-bottom: 16px;
+        }
+
+        .property-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .property-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .property-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .property-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .no-selection {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 40px 20px;
+            font-style: italic;
+            background: var(--light-bg);
+            border-radius: 8px;
+            border: 2px dashed var(--border-color);
+        }
+
+        /* Mini Map */
+        .mini-map {
+            position: absolute;
+            bottom: 20px;
+            right: 340px;
+            width: 200px;
+            height: 150px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .mini-map canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-top: 8px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .toast.success {
+            border-left-color: var(--secondary-color);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger-color);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            padding: 4px;
+            z-index: 1000;
+            min-width: 150px;
+        }
+
+        .context-menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .context-menu-item:hover {
+            background: var(--light-bg);
+        }
+
+        .context-menu-item.danger:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+    </style>
 </head>
 <body>
-  <h1>Automation App Builder</h1>
-  <p>Build automation apps here (dummy interface)</p>
+    <div class="app-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>⚡ Automation Builder</h1>
+                <p>Create powerful workflows visually</p>
+            </div>
+            
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" onclick="switchTab('components')">Components</button>
+                <button class="tab-btn" onclick="switchTab('templates')">Templates</button>
+                <button class="tab-btn" onclick="switchTab('history')">History</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Components Tab -->
+                <div class="tab-pane active" id="components-tab">
+                    <div class="component-category">
+                        <div class="category-title">Triggers</div>
+                        <div class="components-grid">
+                            <div class="component-item" draggable="true" data-type="schedule" data-category="trigger">
+                                <div class="component-icon">⏰</div>
+                                <div class="component-info">
+                                    <div class="component-name">Schedule</div>
+                                    <div class="component-desc">Time-based triggers</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="webhook" data-category="trigger">
+                                <div class="component-icon">🔗</div>
+                                <div class="component-info">
+                                    <div class="component-name">Webhook</div>
+                                    <div class="component-desc">HTTP request trigger</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="email" data-category="trigger">
+                                <div class="component-icon">📧</div>
+                                <div class="component-info">
+                                    <div class="component-name">Email</div>
+                                    <div class="component-desc">New email trigger</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="component-category">
+                        <div class="category-title">Actions</div>
+                        <div class="components-grid">
+                            <div class="component-item" draggable="true" data-type="http" data-category="action">
+                                <div class="component-icon">🌐</div>
+                                <div class="component-info">
+                                    <div class="component-name">HTTP Request</div>
+                                    <div class="component-desc">Make API calls</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="database" data-category="action">
+                                <div class="component-icon">🗄️</div>
+                                <div class="component-info">
+                                    <div class="component-name">Database</div>
+                                    <div class="component-desc">Query database</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="file" data-category="action">
+                                <div class="component-icon">📁</div>
+                                <div class="component-info">
+                                    <div class="component-name">File Operation</div>
+                                    <div class="component-desc">Read/write files</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="notification" data-category="action">
+                                <div class="component-icon">🔔</div>
+                                <div class="component-info">
+                                    <div class="component-name">Notification</div>
+                                    <div class="component-desc">Send alerts</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="component-category">
+                        <div class="category-title">Logic</div>
+                        <div class="components-grid">
+                            <div class="component-item" draggable="true" data-type="condition" data-category="logic">
+                                <div class="component-icon">❓</div>
+                                <div class="component-info">
+                                    <div class="component-name">Condition</div>
+                                    <div class="component-desc">If/else logic</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="loop" data-category="logic">
+                                <div class="component-icon">🔄</div>
+                                <div class="component-info">
+                                    <div class="component-name">Loop</div>
+                                    <div class="component-desc">Repeat actions</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="delay" data-category="logic">
+                                <div class="component-icon">⏳</div>
+                                <div class="component-info">
+                                    <div class="component-name">Delay</div>
+                                    <div class="component-desc">Wait before next</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="parallel" data-category="logic">
+                                <div class="component-icon">⚡</div>
+                                <div class="component-info">
+                                    <div class="component-name">Parallel</div>
+                                    <div class="component-desc">Run simultaneously</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="component-category">
+                        <div class="category-title">Transformers</div>
+                        <div class="components-grid">
+                            <div class="component-item" draggable="true" data-type="transform" data-category="transform">
+                                <div class="component-icon">🔄</div>
+                                <div class="component-info">
+                                    <div class="component-name">Transform Data</div>
+                                    <div class="component-desc">Modify data format</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="filter" data-category="transform">
+                                <div class="component-icon">🔍</div>
+                                <div class="component-info">
+                                    <div class="component-name">Filter</div>
+                                    <div class="component-desc">Filter data</div>
+                                </div>
+                            </div>
+                            <div class="component-item" draggable="true" data-type="aggregate" data-category="transform">
+                                <div class="component-icon">📊</div>
+                                <div class="component-info">
+                                    <div class="component-name">Aggregate</div>
+                                    <div class="component-desc">Group and sum</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates Tab -->
+                <div class="tab-pane" id="templates-tab">
+                    <div class="component-category">
+                        <div class="category-title">Popular Templates</div>
+                        <div class="components-grid">
+                            <div class="component-item" onclick="loadTemplate('data-backup')">
+                                <div class="component-icon">💾</div>
+                                <div class="component-info">
+                                    <div class="component-name">Data Backup</div>
+                                    <div class="component-desc">Automated backup workflow</div>
+                                </div>
+                            </div>
+                            <div class="component-item" onclick="loadTemplate('email-report')">
+                                <div class="component-icon">📊</div>
+                                <div class="component-info">
+                                    <div class="component-name">Email Report</div>
+                                    <div class="component-desc">Daily report generator</div>
+                                </div>
+                            </div>
+                            <div class="component-item" onclick="loadTemplate('api-monitor')">
+                                <div class="component-icon">🔍</div>
+                                <div class="component-info">
+                                    <div class="component-name">API Monitor</div>
+                                    <div class="component-desc">Monitor API endpoints</div>
+                                </div>
+                            </div>
+                            <div class="component-item" onclick="loadTemplate('data-sync')">
+                                <div class="component-icon">🔄</div>
+                                <div class="component-info">
+                                    <div class="component-name">Data Sync</div>
+                                    <div class="component-desc">Sync between systems</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Tab -->
+                <div class="tab-pane" id="history-tab">
+                    <div class="component-category">
+                        <div class="category-title">Recent Workflows</div>
+                        <div class="components-grid" id="historyList">
+                            <!-- History items will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="newWorkflow()" title="New Workflow (Ctrl+N)">📄 New</button>
+                    <button class="tool-btn" onclick="openWorkflow()" title="Open (Ctrl+O)">📂 Open</button>
+                    <button class="tool-btn" onclick="saveWorkflow()" title="Save (Ctrl+S)">💾 Save</button>
+                </div>
+                
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="undo()" title="Undo (Ctrl+Z)">↩️ Undo</button>
+                    <button class="tool-btn" onclick="redo()" title="Redo (Ctrl+Y)">↪️ Redo</button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="runWorkflow()" title="Run Workflow (Ctrl+R)">▶️ Run</button>
+                    <button class="tool-btn" onclick="debugWorkflow()" title="Debug Mode">🐛 Debug</button>
+                    <button class="tool-btn" onclick="validateWorkflow()" title="Validate">✅ Validate</button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="exportWorkflow()">📤 Export</button>
+                    <button class="tool-btn" onclick="importWorkflow()">📥 Import</button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="zoomOut()">−</button>
+                    <span class="tool-btn" style="min-width: 60px;">100%</span>
+                    <button class="tool-btn" onclick="zoomIn()">+</button>
+                    <button class="tool-btn" onclick="fitToScreen()">⤢ Fit</button>
+                </div>
+
+                <div class="workflow-name">
+                    <span>📋</span>
+                    <input type="text" id="workflowName" value="Untitled Workflow" placeholder="Workflow name">
+                </div>
+            </div>
+
+            <div class="canvas-container" id="canvasContainer">
+                <canvas id="automationCanvas" width="1600" height="1200"></canvas>
+                
+                <!-- Mini Map -->
+                <div class="mini-map">
+                    <canvas id="miniMap" width="200" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <div class="panel-header">
+                <h3>⚙️ Properties</h3>
+            </div>
+            <div class="panel-content" id="propertyPanel">
+                <div class="no-selection">
+                    Select a component to edit its properties
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu" style="display: none;">
+        <div class="context-menu-item" onclick="editComponent()">✏️ Edit</div>
+        <div class="context-menu-item" onclick="duplicateComponent()">📋 Duplicate</div>
+        <div class="context-menu-item" onclick="connectComponents()">🔗 Connect</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" onclick="deleteComponent()">🗑️ Delete</div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal Title</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content goes here -->
+            </div>
+            <div class="modal-footer">
+                <button class="tool-btn" onclick="closeModal()">Cancel</button>
+                <button class="tool-btn primary" id="modalConfirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Automation App Builder Class
+        class AutomationBuilder {
+            constructor() {
+                this.canvas = document.getElementById('automationCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.miniMap = document.getElementById('miniMap');
+                this.miniCtx = this.miniMap.getContext('2d');
+                
+                this.nodes = [];
+                this.connections = [];
+                this.selectedNode = null;
+                this.hoveredNode = null;
+                this.dragging = false;
+                this.dragOffset = { x: 0, y: 0 };
+                this.connecting = false;
+                this.connectionStart = null;
+                this.zoom = 1;
+                this.panOffset = { x: 0, y: 0 };
+                this.isPanning = false;
+                this.lastPanPoint = null;
+                this.history = [];
+                this.historyIndex = -1;
+                this.clipboard = null;
+                this.debugMode = false;
+                this.executionPath = [];
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.loadFromStorage();
+                this.render();
+                this.startAutoSave();
+            }
+
+            setupEventListeners() {
+                // Drag and drop
+                document.querySelectorAll('.component-item[draggable="true"]').forEach(item => {
+                    item.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                            type: item.dataset.type,
+                            category: item.dataset.category
+                        }));
+                    });
+                });
+
+                // Canvas events
+                this.canvas.addEventListener('dragover', (e) => e.preventDefault());
+                
+                this.canvas.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left - this.panOffset.x) / this.zoom;
+                    const y = (e.clientY - rect.top - this.panOffset.y) / this.zoom;
+                    
+                    try {
+                        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                        this.addNode(data.type, data.category, x, y);
+                    } catch (err) {
+                        console.error('Drop error:', err);
+                    }
+                });
+
+                // Mouse events
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', () => this.handleMouseUp());
+                this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
+                this.canvas.addEventListener('contextmenu', (e) => this.handleContextMenu(e));
+                this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+                // Window resize
+                window.addEventListener('resize', () => this.render());
+            }
+
+            addNode(type, category, x, y) {
+                const node = {
+                    id: `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    type,
+                    category,
+                    x,
+                    y,
+                    width: 140,
+                    height: 70,
+                    properties: this.getDefaultProperties(type, category),
+                    status: 'idle',
+                    outputs: category === 'logic' ? 
+                        (type === 'condition' ? ['true', 'false'] : ['out']) : 
+                        ['out'],
+                    inputs: ['in']
+                };
+                
+                this.saveToHistory();
+                this.nodes.push(node);
+                this.render();
+                this.showToast('Component added', 'success');
+            }
+
+            getDefaultProperties(type, category) {
+                const defaults = {
+                    // Triggers
+                    schedule: { cron: '0 * * * *', timezone: 'UTC', active: true },
+                    webhook: { method: 'POST', path: '/webhook', secret: '' },
+                    email: { folder: 'INBOX', filter: '', interval: 5 },
+                    
+                    // Actions
+                    http: { url: 'https://api.example.com', method: 'GET', headers: {}, body: '' },
+                    database: { connection: '', query: '', params: [] },
+                    file: { operation: 'read', path: '', encoding: 'utf8' },
+                    notification: { type: 'email', recipient: '', subject: '', message: '' },
+                    
+                    // Logic
+                    condition: { expression: '{{data.value}} > 10' },
+                    loop: { type: 'for', count: 10, collection: '' },
+                    delay: { duration: 5, unit: 'seconds' },
+                    parallel: { branches: 2 },
+                    
+                    // Transformers
+                    transform: { mapping: {}, formula: '' },
+                    filter: { condition: '', fields: [] },
+                    aggregate: { groupBy: '', operation: 'sum', field: '' }
+                };
+                
+                return defaults[type] || { name: type, description: '' };
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Apply transform
+                this.ctx.save();
+                this.ctx.translate(this.panOffset.x, this.panOffset.y);
+                this.ctx.scale(this.zoom, this.zoom);
+
+                // Draw grid
+                this.drawGrid();
+
+                // Draw connections
+                this.connections.forEach(conn => {
+                    const fromNode = this.nodes.find(n => n.id === conn.from);
+                    const toNode = this.nodes.find(n => n.id === conn.to);
+                    
+                    if (fromNode && toNode) {
+                        this.drawConnection(fromNode, toNode, conn.status);
+                    }
+                });
+
+                // Draw nodes
+                this.nodes.forEach(node => {
+                    this.drawNode(node);
+                });
+
+                // Draw connecting line
+                if (this.connecting && this.connectionStart) {
+                    this.drawConnectingLine();
+                }
+
+                this.ctx.restore();
+                
+                // Update mini map
+                this.updateMiniMap();
+            }
+
+            drawGrid() {
+                const gridSize = 20;
+                const startX = Math.floor(-this.panOffset.x / this.zoom / gridSize) * gridSize;
+                const startY = Math.floor(-this.panOffset.y / this.zoom / gridSize) * gridSize;
+                const endX = startX + (this.canvas.width / this.zoom) + gridSize;
+                const endY = startY + (this.canvas.height / this.zoom) + gridSize;
+
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = '#e5e7eb';
+                this.ctx.lineWidth = 0.5;
+
+                for (let x = startX; x < endX; x += gridSize) {
+                    this.ctx.moveTo(x, startY);
+                    this.ctx.lineTo(x, endY);
+                }
+
+                for (let y = startY; y < endY; y += gridSize) {
+                    this.ctx.moveTo(startX, y);
+                    this.ctx.lineTo(endX, y);
+                }
+
+                this.ctx.stroke();
+            }
+
+            drawNode(node) {
+                const ctx = this.ctx;
+                const isSelected = this.selectedNode?.id === node.id;
+                const isHovered = this.hoveredNode?.id === node.id;
+                const isExecuting = this.executionPath.includes(node.id);
+                
+                // Draw shadow
+                ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 2;
+                
+                // Draw node background
+                ctx.fillStyle = this.getNodeColor(node);
+                ctx.strokeStyle = isSelected ? '#6366f1' : (isHovered ? '#9ca3af' : '#e5e7eb');
+                ctx.lineWidth = isSelected ? 3 : (isHovered ? 2 : 1);
+                
+                ctx.beginPath();
+                ctx.roundRect(node.x, node.y, node.width, node.height, 8);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw status indicator
+                if (node.status !== 'idle') {
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.arc(node.x + node.width - 10, node.y + 10, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = this.getStatusColor(node.status);
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+                
+                // Draw icon
+                ctx.font = '20px Arial';
+                ctx.fillStyle = '#374151';
+                ctx.fillText(this.getNodeIcon(node), node.x + 10, node.y + 30);
+                
+                // Draw label
+                ctx.font = 'bold 12px Inter, sans-serif';
+                ctx.fillStyle = '#111827';
+                ctx.fillText(this.getNodeLabel(node), node.x + 40, node.y + 25);
+                
+                // Draw type
+                ctx.font = '10px Inter, sans-serif';
+                ctx.fillStyle = '#6b7280';
+                ctx.fillText(node.type, node.x + 40, node.y + 40);
+                
+                // Draw execution count (in debug mode)
+                if (this.debugMode && node.executionCount) {
+                    ctx.font = 'bold 10px Inter, sans-serif';
+                    ctx.fillStyle = '#6366f1';
+                    ctx.fillText(`×${node.executionCount}`, node.x + node.width - 30, node.y + node.height - 10);
+                }
+                
+                // Draw connection ports
+                this.drawPorts(node);
+            }
+
+            drawPorts(node) {
+                const ctx = this.ctx;
+                
+                // Input port
+                if (node.inputs) {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y + node.height / 2, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#9ca3af';
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                
+                // Output ports
+                if (node.outputs) {
+                    node.outputs.forEach((output, index) => {
+                        const y = node.y + (node.height / (node.outputs.length + 1)) * (index + 1);
+                        ctx.beginPath();
+                        ctx.arc(node.x + node.width, y, 5, 0, Math.PI * 2);
+                        ctx.fillStyle = '#9ca3af';
+                        ctx.fill();
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        // Label for multiple outputs
+                        if (node.outputs.length > 1) {
+                            ctx.font = '8px Inter, sans-serif';
+                            ctx.fillStyle = '#6b7280';
+                            ctx.fillText(output, node.x + node.width + 8, y + 3);
+                        }
+                    });
+                }
+            }
+
+            drawConnection(from, to, status = 'idle') {
+                const ctx = this.ctx;
+                const fromPort = { x: from.x + from.width, y: from.y + from.height / 2 };
+                const toPort = { x: to.x, y: to.y + to.height / 2 };
+                
+                ctx.beginPath();
+                ctx.strokeStyle = this.getConnectionColor(status);
+                ctx.lineWidth = this.debugMode && status === 'executing' ? 4 : 2;
+                ctx.setLineDash(status === 'executing' ? [] : [5, 3]);
+                
+                // Draw curved line
+                const cp1x = fromPort.x + 50;
+                const cp1y = fromPort.y;
+                const cp2x = toPort.x - 50;
+                const cp2y = toPort.y;
+                
+                ctx.moveTo(fromPort.x, fromPort.y);
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, toPort.x, toPort.y);
+                ctx.stroke();
+                
+                // Draw arrow
+                if (status !== 'executing') {
+                    ctx.setLineDash([]);
+                    this.drawArrowhead(toPort.x, toPort.y, Math.atan2(toPort.y - cp2y, toPort.x - cp2x));
+                }
+                
+                // Draw data flow animation
+                if (this.debugMode && status === 'executing') {
+                    this.drawDataFlow(fromPort, toPort);
+                }
+            }
+
+            drawDataFlow(from, to) {
+                const ctx = this.ctx;
+                const progress = (Date.now() % 2000) / 2000;
+                
+                const x = from.x + (to.x - from.x) * progress;
+                const y = from.y + (to.y - from.y) * progress;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#6366f1';
+                ctx.fill();
+                ctx.shadowColor = '#6366f1';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+            }
+
+            drawConnectingLine() {
+                const ctx = this.ctx;
+                const mouse = this.getMousePosition();
+                
+                ctx.beginPath();
+                ctx.strokeStyle = '#6366f1';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 3]);
+                
+                ctx.moveTo(this.connectionStart.x, this.connectionStart.y);
+                ctx.lineTo(mouse.x, mouse.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            drawArrowhead(x, y, angle) {
+                const ctx = this.ctx;
+                const size = 8;
+                
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.fillStyle = '#6366f1';
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-size, -size/2);
+                ctx.lineTo(-size, size/2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            updateMiniMap() {
+                this.miniCtx.clearRect(0, 0, 200, 150);
+                
+                // Draw mini viewport
+                const scale = Math.min(200 / this.canvas.width, 150 / this.canvas.height) * 0.3;
+                
+                this.nodes.forEach(node => {
+                    this.miniCtx.fillStyle = this.getNodeColor(node);
+                    this.miniCtx.fillRect(
+                        node.x * scale,
+                        node.y * scale,
+                        node.width * scale,
+                        node.height * scale
+                    );
+                });
+                
+                // Draw viewport rectangle
+                const viewX = -this.panOffset.x / this.zoom * scale;
+                const viewY = -this.panOffset.y / this.zoom * scale;
+                const viewWidth = (this.canvas.width / this.zoom) * scale;
+                const viewHeight = (this.canvas.height / this.zoom) * scale;
+                
+                this.miniCtx.strokeStyle = '#6366f1';
+                this.miniCtx.lineWidth = 2;
+                this.miniCtx.strokeRect(viewX, viewY, viewWidth, viewHeight);
+            }
+
+            getNodeColor(node) {
+                const colors = {
+                    trigger: '#dbeafe',
+                    action: '#dcfce7',
+                    logic: '#fed7aa',
+                    transform: '#fae8ff'
+                };
+                return colors[node.category] || '#f3f4f6';
+            }
+
+            getNodeIcon(node) {
+                const icons = {
+                    schedule: '⏰',
+                    webhook: '🔗',
+                    email: '📧',
+                    http: '🌐',
+                    database: '🗄️',
+                    file: '📁',
+                    notification: '🔔',
+                    condition: '❓',
+                    loop: '🔄',
+                    delay: '⏳',
+                    parallel: '⚡',
+                    transform: '🔄',
+                    filter: '🔍',
+                    aggregate: '📊'
+                };
+                return icons[node.type] || '📦';
+            }
+
+            getNodeLabel(node) {
+                const labels = {
+                    schedule: 'Schedule',
+                    webhook: 'Webhook',
+                    email: 'Email',
+                    http: 'HTTP Request',
+                    database: 'Database',
+                    file: 'File',
+                    notification: 'Notification',
+                    condition: 'Condition',
+                    loop: 'Loop',
+                    delay: 'Delay',
+                    parallel: 'Parallel',
+                    transform: 'Transform',
+                    filter: 'Filter',
+                    aggregate: 'Aggregate'
+                };
+                return labels[node.type] || node.type;
+            }
+
+            getConnectionColor(status) {
+                const colors = {
+                    executing: '#6366f1',
+                    success: '#10b981',
+                    error: '#ef4444',
+                    idle: '#9ca3af'
+                };
+                return colors[status] || colors.idle;
+            }
+
+            getStatusColor(status) {
+                const colors = {
+                    running: '#f59e0b',
+                    success: '#10b981',
+                    error: '#ef4444',
+                    idle: '#9ca3af'
+                };
+                return colors[status] || colors.idle;
+            }
+
+            getMousePosition(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: (e.clientX - rect.left - this.panOffset.x) / this.zoom,
+                    y: (e.clientY - rect.top - this.panOffset.y) / this.zoom
+                };
+            }
+
+            findNodeAt(x, y) {
+                return this.nodes.find(node => 
+                    x >= node.x && x <= node.x + node.width &&
+                    y >= node.y && y <= node.y + node.height
+                );
+            }
+
+            findPortAt(x, y) {
+                for (const node of this.nodes) {
+                    // Check input port
+                    const inputPort = { x: node.x, y: node.y + node.height / 2 };
+                    if (Math.hypot(x - inputPort.x, y - inputPort.y) < 10) {
+                        return { node, type: 'input' };
+                    }
+                    
+                    // Check output ports
+                    if (node.outputs) {
+                        for (let i = 0; i < node.outputs.length; i++) {
+                            const y = node.y + (node.height / (node.outputs.length + 1)) * (i + 1);
+                            const outputPort = { x: node.x + node.width, y };
+                            if (Math.hypot(x - outputPort.x, y - outputPort.y) < 10) {
+                                return { node, type: 'output', index: i };
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+
+            handleMouseDown(e) {
+                const pos = this.getMousePosition(e);
+                
+                if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
+                    // Middle button or Ctrl+Left for panning
+                    this.isPanning = true;
+                    this.lastPanPoint = { x: e.clientX, y: e.clientY };
+                    this.canvas.style.cursor = 'grabbing';
+                    return;
+                }
+                
+                const port = this.findPortAt(pos.x, pos.y);
+                
+                if (port) {
+                    // Start connecting from port
+                    this.connecting = true;
+                    this.connectionStart = { 
+                        node: port.node, 
+                        type: port.type, 
+                        index: port.index,
+                        x: pos.x, 
+                        y: pos.y 
+                    };
+                } else {
+                    const node = this.findNodeAt(pos.x, pos.y);
+                    
+                    if (node) {
+                        this.selectedNode = node;
+                        this.dragging = true;
+                        this.dragOffset.x = pos.x - node.x;
+                        this.dragOffset.y = pos.y - node.y;
+                        this.updatePropertyPanel();
+                    } else {
+                        this.selectedNode = null;
+                        this.updatePropertyPanel();
+                    }
+                }
+                
+                this.render();
+            }
+
+            handleMouseMove(e) {
+                const pos = this.getMousePosition(e);
+                
+                if (this.isPanning) {
+                    // Pan canvas
+                    const dx = e.clientX - this.lastPanPoint.x;
+                    const dy = e.clientY - this.lastPanPoint.y;
+                    
+                    this.panOffset.x += dx;
+                    this.panOffset.y += dy;
+                    
+                    this.lastPanPoint = { x: e.clientX, y: e.clientY };
+                    this.render();
+                    return;
+                }
+                
+                // Update hover
+                const hoveredNode = this.findNodeAt(pos.x, pos.y);
+                if (hoveredNode !== this.hoveredNode) {
+                    this.hoveredNode = hoveredNode;
+                    this.render();
+                }
+                
+                if (this.dragging && this.selectedNode) {
+                    // Move node
+                    this.selectedNode.x = pos.x - this.dragOffset.x;
+                    this.selectedNode.y = pos.y - this.dragOffset.y;
+                    this.render();
+                } else if (this.connecting) {
+                    // Draw connecting line
+                    this.render();
+                }
+            }
+
+            handleMouseUp() {
+                if (this.connecting && this.connectionStart) {
+                    const pos = this.getMousePosition(event);
+                    const port = this.findPortAt(pos.x, pos.y);
+                    
+                    if (port && port.type === 'input' && port.node.id !== this.connectionStart.node.id) {
+                        // Create connection
+                        this.saveToHistory();
+                        this.connections.push({
+                            from: this.connectionStart.node.id,
+                            fromIndex: this.connectionStart.index,
+                            to: port.node.id,
+                            status: 'idle'
+                        });
+                        this.showToast('Connection created', 'success');
+                    }
+                }
+                
+                this.dragging = false;
+                this.connecting = false;
+                this.isPanning = false;
+                this.connectionStart = null;
+                this.canvas.style.cursor = 'default';
+                this.render();
+            }
+
+            handleWheel(e) {
+                e.preventDefault();
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                const newZoom = Math.max(0.1, Math.min(3, this.zoom * zoomFactor));
+                
+                // Zoom towards mouse position
+                const worldPos = {
+                    x: (mouseX - this.panOffset.x) / this.zoom,
+                    y: (mouseY - this.panOffset.y) / this.zoom
+                };
+                
+                this.zoom = newZoom;
+                
+                this.panOffset.x = mouseX - worldPos.x * this.zoom;
+                this.panOffset.y = mouseY - worldPos.y * this.zoom;
+                
+                this.render();
+            }
+
+            handleContextMenu(e) {
+                e.preventDefault();
+                
+                const pos = this.getMousePosition(e);
+                const node = this.findNodeAt(pos.x, pos.y);
+                
+                if (node) {
+                    this.selectedNode = node;
+                    this.showContextMenu(e.clientX, e.clientY);
+                    this.updatePropertyPanel();
+                    this.render();
+                }
+            }
+
+            handleDoubleClick(e) {
+                const pos = this.getMousePosition(e);
+                const node = this.findNodeAt(pos.x, pos.y);
+                
+                if (node) {
+                    this.editNode(node);
+                }
+            }
+
+            handleKeyDown(e) {
+                // Ctrl+S
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    this.saveWorkflow();
+                }
+                
+                // Ctrl+Z
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    this.undo();
+                }
+                
+                // Ctrl+Y
+                if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    this.redo();
+                }
+                
+                // Ctrl+N
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    this.newWorkflow();
+                }
+                
+                // Ctrl+O
+                if (e.ctrlKey && e.key === 'o') {
+                    e.preventDefault();
+                    this.openWorkflow();
+                }
+                
+                // Delete
+                if (e.key === 'Delete' && this.selectedNode) {
+                    this.deleteSelected();
+                }
+                
+                // Ctrl+C
+                if (e.ctrlKey && e.key === 'c' && this.selectedNode) {
+                    this.copySelected();
+                }
+                
+                // Ctrl+V
+                if (e.ctrlKey && e.key === 'v' && this.clipboard) {
+                    this.pasteSelected();
+                }
+                
+                // Ctrl+D (Duplicate)
+                if (e.ctrlKey && e.key === 'd' && this.selectedNode) {
+                    e.preventDefault();
+                    this.duplicateSelected();
+                }
+            }
+
+            showContextMenu(x, y) {
+                const menu = document.getElementById('contextMenu');
+                menu.style.display = 'block';
+                menu.style.left = x + 'px';
+                menu.style.top = y + 'px';
+                
+                // Hide on click outside
+                setTimeout(() => {
+                    document.addEventListener('click', function hideMenu() {
+                        menu.style.display = 'none';
+                        document.removeEventListener('click', hideMenu);
+                    });
+                }, 0);
+            }
+
+            updatePropertyPanel() {
+                const panel = document.getElementById('propertyPanel');
+                
+                if (!this.selectedNode) {
+                    panel.innerHTML = `
+                        <div class="no-selection">
+                            Select a component to edit its properties
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const node = this.selectedNode;
+                let html = '';
+                
+                // Basic properties
+                html += `
+                    <div class="property-section">
+                        <div class="property-section-title">Basic Information</div>
+                        <div class="property-group">
+                            <label class="property-label">Name</label>
+                            <input type="text" class="property-input" value="${node.type}" 
+                                onchange="updateNodeProperty('${node.id}', 'name', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Description</label>
+                            <textarea class="property-textarea" 
+                                onchange="updateNodeProperty('${node.id}', 'description', this.value)">${node.properties.description || ''}</textarea>
+                        </div>
+                    </div>
+                `;
+                
+                // Type-specific properties
+                if (Object.keys(node.properties).length > 0) {
+                    html += `<div class="property-section"><div class="property-section-title">Configuration</div>`;
+                    
+                    Object.entries(node.properties).forEach(([key, value]) => {
+                        if (key !== 'name' && key !== 'description') {
+                            html += `
+                                <div class="property-group">
+                                    <label class="property-label">${key}</label>
+                                    ${this.renderPropertyInput(key, value, node)}
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    html += `</div>`;
+                }
+                
+                // Advanced properties
+                html += `
+                    <div class="property-section">
+                        <div class="property-section-title">Advanced</div>
+                        <div class="property-group">
+                            <label class="property-checkbox">
+                                <input type="checkbox" ${node.properties.active ? 'checked' : ''} 
+                                    onchange="updateNodeProperty('${node.id}', 'active', this.checked)">
+                                <span>Active</span>
+                            </label>
+                        </div>
+                        <div class="property-group">
+                            <label class="property-checkbox">
+                                <input type="checkbox" ${node.properties.retry ? 'checked' : ''} 
+                                    onchange="updateNodeProperty('${node.id}', 'retry', this.checked)">
+                                <span>Retry on failure</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+                
+                panel.innerHTML = html;
+            }
+
+            renderPropertyInput(key, value, node) {
+                if (typeof value === 'boolean') {
+                    return `
+                        <label class="property-checkbox">
+                            <input type="checkbox" ${value ? 'checked' : ''} 
+                                onchange="updateNodeProperty('${node.id}', '${key}', this.checked)">
+                            <span>${key}</span>
+                        </label>
+                    `;
+                } else if (key.includes('time') || key.includes('date')) {
+                    return `<input type="datetime-local" class="property-input" value="${value}" 
+                        onchange="updateNodeProperty('${node.id}', '${key}', this.value)">`;
+                } else if (key.includes('color')) {
+                    return `<input type="color" class="property-input" value="${value}" 
+                        onchange="updateNodeProperty('${node.id}', '${key}', this.value)">`;
+                } else if (typeof value === 'string' && value.length > 50) {
+                    return `<textarea class="property-textarea" 
+                        onchange="updateNodeProperty('${node.id}', '${key}', this.value)">${value}</textarea>`;
+                } else {
+                    return `<input type="text" class="property-input" value="${value}" 
+                        onchange="updateNodeProperty('${node.id}', '${key}', this.value)">`;
+                }
+            }
+
+            editNode(node) {
+                this.selectedNode = node;
+                this.updatePropertyPanel();
+                
+                // Scroll to property panel
+                document.querySelector('.right-panel').scrollTop = 0;
+            }
+
+            deleteSelected() {
+                if (this.selectedNode) {
+                    this.saveToHistory();
+                    
+                    // Remove connections
+                    this.connections = this.connections.filter(c => 
+                        c.from !== this.selectedNode.id && c.to !== this.selectedNode.id
+                    );
+                    
+                    // Remove node
+                    this.nodes = this.nodes.filter(n => n.id !== this.selectedNode.id);
+                    
+                    this.selectedNode = null;
+                    this.render();
+                    this.updatePropertyPanel();
+                    this.showToast('Component deleted', 'success');
+                }
+            }
+
+            duplicateSelected() {
+                if (this.selectedNode) {
+                    this.saveToHistory();
+                    
+                    const newNode = JSON.parse(JSON.stringify(this.selectedNode));
+                    newNode.id = `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    newNode.x += 20;
+                    newNode.y += 20;
+                    
+                    this.nodes.push(newNode);
+                    this.selectedNode = newNode;
+                    this.render();
+                    this.updatePropertyPanel();
+                    this.showToast('Component duplicated', 'success');
+                }
+            }
+
+            copySelected() {
+                if (this.selectedNode) {
+                    this.clipboard = JSON.parse(JSON.stringify(this.selectedNode));
+                    this.showToast('Copied to clipboard', 'success');
+                }
+            }
+
+            pasteSelected() {
+                if (this.clipboard) {
+                    this.saveToHistory();
+                    
+                    const newNode = JSON.parse(JSON.stringify(this.clipboard));
+                    newNode.id = `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    newNode.x += 50;
+                    newNode.y += 50;
+                    
+                    this.nodes.push(newNode);
+                    this.selectedNode = newNode;
+                    this.render();
+                    this.updatePropertyPanel();
+                    this.showToast('Pasted from clipboard', 'success');
+                }
+            }
+
+            saveToHistory() {
+                // Truncate future history if we're not at the end
+                if (this.historyIndex < this.history.length - 1) {
+                    this.history = this.history.slice(0, this.historyIndex + 1);
+                }
+                
+                // Save current state
+                this.history.push({
+                    nodes: JSON.parse(JSON.stringify(this.nodes)),
+                    connections: JSON.parse(JSON.stringify(this.connections))
+                });
+                
+                // Limit history size
+                if (this.history.length > 50) {
+                    this.history.shift();
+                }
+                
+                this.historyIndex = this.history.length - 1;
+            }
+
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    const state = this.history[this.historyIndex];
+                    this.nodes = JSON.parse(JSON.stringify(state.nodes));
+                    this.connections = JSON.parse(JSON.stringify(state.connections));
+                    this.selectedNode = null;
+                    this.render();
+                    this.updatePropertyPanel();
+                    this.showToast('Undo', 'info');
+                }
+            }
+
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    const state = this.history[this.historyIndex];
+                    this.nodes = JSON.parse(JSON.stringify(state.nodes));
+                    this.connections = JSON.parse(JSON.stringify(state.connections));
+                    this.selectedNode = null;
+                    this.render();
+                    this.updatePropertyPanel();
+                    this.showToast('Redo', 'info');
+                }
+            }
+
+            saveWorkflow() {
+                const name = document.getElementById('workflowName').value || 'Untitled';
+                
+                const workflow = {
+                    name,
+                    nodes: this.nodes,
+                    connections: this.connections,
+                    version: '1.0',
+                    created: new Date().toISOString(),
+                    modified: new Date().toISOString()
+                };
+                
+                // Save to localStorage
+                const saved = JSON.parse(localStorage.getItem('workflows') || '{}');
+                saved[name] = workflow;
+                localStorage.setItem('workflows', JSON.stringify(saved));
+                
+                // Add to history
+                this.addToHistoryList(name);
+                
+                this.showToast('Workflow saved successfully!', 'success');
+            }
+
+            loadWorkflow(name) {
+                const saved = JSON.parse(localStorage.getItem('workflows') || '{}');
+                const workflow = saved[name];
+                
+                if (workflow) {
+                    this.nodes = workflow.nodes || [];
+                    this.connections = workflow.connections || [];
+                    document.getElementById('workflowName').value = workflow.name;
+                    this.selectedNode = null;
+                    this.render();
+                    this.updatePropertyPanel();
+                    this.showToast(`Loaded: ${name}`, 'success');
+                }
+            }
+
+            loadFromStorage() {
+                const saved = JSON.parse(localStorage.getItem('workflows') || '{}');
+                const names = Object.keys(saved);
+                
+                if (names.length > 0) {
+                    this.loadWorkflow(names[0]);
+                }
+                
+                this.updateHistoryList();
+            }
+
+            addToHistoryList(name) {
+                const list = document.getElementById('historyList');
+                const item = document.createElement('div');
+                item.className = 'component-item';
+                item.innerHTML = `
+                    <div class="component-icon">📋</div>
+                    <div class="component-info">
+                        <div class="component-name">${name}</div>
+                        <div class="component-desc">${new Date().toLocaleString()}</div>
+                    </div>
+                `;
+                item.onclick = () => this.loadWorkflow(name);
+                
+                list.insertBefore(item, list.firstChild);
+                
+                // Limit list size
+                while (list.children.length > 10) {
+                    list.removeChild(list.lastChild);
+                }
+            }
+
+            updateHistoryList() {
+                const list = document.getElementById('historyList');
+                const saved = JSON.parse(localStorage.getItem('workflows') || '{}');
+                
+                list.innerHTML = '';
+                Object.keys(saved).slice(0, 10).forEach(name => {
+                    this.addToHistoryList(name);
+                });
+            }
+
+            newWorkflow() {
+                if (this.nodes.length > 0 && confirm('Create new workflow? Unsaved changes will be lost.')) {
+                    this.nodes = [];
+                    this.connections = [];
+                    this.selectedNode = null;
+                    document.getElementById('workflowName').value = 'Untitled Workflow';
+                    this.render();
+                    this.updatePropertyPanel();
+                    this.showToast('New workflow created', 'info');
+                }
+            }
+
+            openWorkflow() {
+                const saved = JSON.parse(localStorage.getItem('workflows') || '{}');
+                const names = Object.keys(saved);
+                
+                if (names.length === 0) {
+                    this.showToast('No saved workflows found', 'warning');
+                    return;
+                }
+                
+                // Show modal with workflow list
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = names.map(name => `
+                    <div class="component-item" onclick="selectWorkflow('${name}')">
+                        <div class="component-icon">📋</div>
+                        <div class="component-info">
+                            <div class="component-name">${name}</div>
+                            <div class="component-desc">${new Date(saved[name].modified).toLocaleString()}</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('modalTitle').textContent = 'Open Workflow';
+                document.getElementById('modalConfirmBtn').onclick = () => {
+                    const selected = document.querySelector('.component-item.selected');
+                    if (selected) {
+                        this.loadWorkflow(selected.querySelector('.component-name').textContent);
+                    }
+                    closeModal();
+                };
+                document.getElementById('modal').classList.add('active');
+            }
+
+            runWorkflow() {
+                this.showToast('Starting workflow execution...', 'info');
+                
+                // Simulate workflow execution
+                this.executionPath = [];
+                this.nodes.forEach(node => node.status = 'idle');
+                
+                // Find start nodes (triggers)
+                const startNodes = this.nodes.filter(n => n.category === 'trigger');
+                
+                if (startNodes.length === 0) {
+                    this.showToast('No trigger nodes found', 'warning');
+                    return;
+                }
+                
+                // Simulate execution
+                this.simulateExecution(startNodes[0]);
+            }
+
+            simulateExecution(node) {
+                node.status = 'running';
+                this.executionPath.push(node.id);
+                this.render();
+                
+                // Find next nodes
+                const nextConnections = this.connections.filter(c => c.from === node.id);
+                
+                setTimeout(() => {
+                    node.status = 'success';
+                    this.render();
+                    
+                    nextConnections.forEach(conn => {
+                        const nextNode = this.nodes.find(n => n.id === conn.to);
+                        if (nextNode) {
+                            conn.status = 'executing';
+                            this.simulateExecution(nextNode);
+                        }
+                    });
+                    
+                    setTimeout(() => {
+                        node.status = 'idle';
+                        nextConnections.forEach(conn => conn.status = 'idle');
+                        this.render();
+                    }, 1000);
+                }, 1000);
+            }
+
+            debugWorkflow() {
+                this.debugMode = !this.debugMode;
+                this.showToast(`Debug mode: ${this.debugMode ? 'ON' : 'OFF'}`, 'info');
+                this.render();
+            }
+
+            validateWorkflow() {
+                const issues = [];
+                
+                // Check for disconnected nodes
+                this.nodes.forEach(node => {
+                    const hasInput = node.type === 'trigger' || this.connections.some(c => c.to === node.id);
+                    const hasOutput = node.type === 'end' || this.connections.some(c => c.from === node.id);
+                    
+                    if (!hasInput && node.type !== 'trigger') {
+                        issues.push(`⚠️ ${node.type} node has no input connection`);
+                    }
+                    
+                    if (!hasOutput && node.type !== 'end') {
+                        issues.push(`⚠️ ${node.type} node has no output connection`);
+                    }
+                });
+                
+                // Check for cycles
+                if (this.hasCycle()) {
+                    issues.push('❌ Workflow contains cycles');
+                }
+                
+                if (issues.length === 0) {
+                    this.showToast('✅ Workflow is valid!', 'success');
+                } else {
+                    this.showIssues(issues);
+                }
+            }
+
+            hasCycle() {
+                // Simple cycle detection
+                const visited = new Set();
+                const recursionStack = new Set();
+                
+                const dfs = (nodeId) => {
+                    visited.add(nodeId);
+                    recursionStack.add(nodeId);
+                    
+                    const outgoing = this.connections.filter(c => c.from === nodeId);
+                    for (const conn of outgoing) {
+                        if (!visited.has(conn.to)) {
+                            if (dfs(conn.to)) return true;
+                        } else if (recursionStack.has(conn.to)) {
+                            return true;
+                        }
+                    }
+                    
+                    recursionStack.delete(nodeId);
+                    return false;
+                };
+                
+                for (const node of this.nodes) {
+                    if (!visited.has(node.id)) {
+                        if (dfs(node.id)) return true;
+                    }
+                }
+                
+                return false;
+            }
+
+            showIssues(issues) {
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = issues.map(issue => 
+                    `<div style="padding: 8px; margin: 4px 0; background: #fef2f2; border-radius: 4px; color: #991b1b;">${issue}</div>`
+                ).join('');
+                
+                document.getElementById('modalTitle').textContent = 'Validation Issues';
+                document.getElementById('modalConfirmBtn').style.display = 'none';
+                document.getElementById('modal').classList.add('active');
+                
+                // Reset after closing
+                setTimeout(() => {
+                    document.getElementById('modalConfirmBtn').style.display = 'block';
+                }, 1000);
+            }
+
+            exportWorkflow() {
+                const workflow = {
+                    name: document.getElementById('workflowName').value,
+                    nodes: this.nodes,
+                    connections: this.connections,
+                    version: '1.0',
+                    exported: new Date().toISOString()
+                };
+                
+                const dataStr = JSON.stringify(workflow, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportName = `${workflow.name.replace(/\s+/g, '_')}_${Date.now()}.json`;
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportName);
+                linkElement.click();
+                
+                this.showToast('Workflow exported', 'success');
+            }
+
+            importWorkflow() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = (e) => {
+                        try {
+                            const workflow = JSON.parse(e.target.result);
+                            this.nodes = workflow.nodes || [];
+                            this.connections = workflow.connections || [];
+                            document.getElementById('workflowName').value = workflow.name || 'Imported Workflow';
+                            this.selectedNode = null;
+                            this.render();
+                            this.updatePropertyPanel();
+                            this.showToast('Workflow imported successfully', 'success');
+                        } catch (err) {
+                            this.showToast('Invalid workflow file', 'error');
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                };
+                
+                input.click();
+            }
+
+            zoomIn() {
+                const oldZoom = this.zoom;
+                this.zoom = Math.min(3, this.zoom + 0.2);
+                
+                // Adjust pan to keep center
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                const worldCenterX = (centerX - this.panOffset.x) / oldZoom;
+                const worldCenterY = (centerY - this.panOffset.y) / oldZoom;
+                
+                this.panOffset.x = centerX - worldCenterX * this.zoom;
+                this.panOffset.y = centerY - worldCenterY * this.zoom;
+                
+                this.render();
+            }
+
+            zoomOut() {
+                const oldZoom = this.zoom;
+                this.zoom = Math.max(0.3, this.zoom - 0.2);
+                
+                // Adjust pan to keep center
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                const worldCenterX = (centerX - this.panOffset.x) / oldZoom;
+                const worldCenterY = (centerY - this.panOffset.y) / oldZoom;
+                
+                this.panOffset.x = centerX - worldCenterX * this.zoom;
+                this.panOffset.y = centerY - worldCenterY * this.zoom;
+                
+                this.render();
+            }
+
+            fitToScreen() {
+                if (this.nodes.length === 0) return;
+                
+                // Find bounds
+                let minX = Math.min(...this.nodes.map(n => n.x));
+                let minY = Math.min(...this.nodes.map(n => n.y));
+                let maxX = Math.max(...this.nodes.map(n => n.x + n.width));
+                let maxY = Math.max(...this.nodes.map(n => n.y + n.height));
+                
+                // Add padding
+                minX -= 50;
+                minY -= 50;
+                maxX += 50;
+                maxY += 50;
+                
+                const width = maxX - minX;
+                const height = maxY - minY;
+                
+                const scaleX = this.canvas.width / width;
+                const scaleY = this.canvas.height / height;
+                
+                this.zoom = Math.min(scaleX, scaleY) * 0.9;
+                
+                this.panOffset.x = -minX * this.zoom + (this.canvas.width - width * this.zoom) / 2;
+                this.panOffset.y = -minY * this.zoom + (this.canvas.height - height * this.zoom) / 2;
+                
+                this.render();
+            }
+
+            startAutoSave() {
+                setInterval(() => {
+                    if (this.nodes.length > 0) {
+                        this.saveWorkflow();
+                    }
+                }, 60000); // Auto-save every minute
+            }
+
+            showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <span>${this.getToastIcon(type)}</span>
+                    <span>${message}</span>
+                `;
+                
+                container.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            getToastIcon(type) {
+                const icons = {
+                    success: '✅',
+                    error: '❌',
+                    warning: '⚠️',
+                    info: 'ℹ️'
+                };
+                return icons[type] || 'ℹ️';
+            }
+        }
+
+        // CanvasRenderingContext2D extension
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+            this.moveTo(x + r, y);
+            this.lineTo(x + w - r, y);
+            this.quadraticCurveTo(x + w, y, x + w, y + r);
+            this.lineTo(x + w, y + h - r);
+            this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            this.lineTo(x + r, y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - r);
+            this.lineTo(x, y + r);
+            this.quadraticCurveTo(x, y, x + r, y);
+            return this;
+        };
+
+        // Initialize
+        const builder = new AutomationBuilder();
+
+        // Global functions
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+
+        function newWorkflow() {
+            builder.newWorkflow();
+        }
+
+        function openWorkflow() {
+            builder.openWorkflow();
+        }
+
+        function saveWorkflow() {
+            builder.saveWorkflow();
+        }
+
+        function undo() {
+            builder.undo();
+        }
+
+        function redo() {
+            builder.redo();
+        }
+
+        function runWorkflow() {
+            builder.runWorkflow();
+        }
+
+        function debugWorkflow() {
+            builder.debugWorkflow();
+        }
+
+        function validateWorkflow() {
+            builder.validateWorkflow();
+        }
+
+        function exportWorkflow() {
+            builder.exportWorkflow();
+        }
+
+        function importWorkflow() {
+            builder.importWorkflow();
+        }
+
+        function zoomIn() {
+            builder.zoomIn();
+        }
+
+        function zoomOut() {
+            builder.zoomOut();
+        }
+
+        function fitToScreen() {
+            builder.fitToScreen();
+        }
+
+        function updateNodeProperty(nodeId, key, value) {
+            const node = builder.nodes.find(n => n.id === nodeId);
+            if (node) {
+                builder.saveToHistory();
+                node.properties[key] = value;
+                builder.render();
+            }
+        }
+
+        function editComponent() {
+            if (builder.selectedNode) {
+                builder.editNode(builder.selectedNode);
+            }
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        function duplicateComponent() {
+            builder.duplicateSelected();
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        function connectComponents() {
+            // Start connecting mode
+            if (builder.selectedNode) {
+                builder.connecting = true;
+                builder.connectionStart = {
+                    node: builder.selectedNode,
+                    type: 'output',
+                    x: builder.selectedNode.x + builder.selectedNode.width,
+                    y: builder.selectedNode.y + builder.selectedNode.height / 2
+                };
+            }
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        function deleteComponent() {
+            builder.deleteSelected();
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        function loadTemplate(name) {
+            const templates = {
+                'data-backup': {
+                    nodes: [
+                        { id: 'node1', type: 'schedule', category: 'trigger', x: 100, y: 100, width: 140, height: 70, properties: { cron: '0 2 * * *' } },
+                        { id: 'node2', type: 'database', category: 'action', x: 300, y: 100, width: 140, height: 70, properties: { operation: 'backup' } },
+                        { id: 'node3', type: 'file', category: 'action', x: 500, y: 100, width: 140, height: 70, properties: { operation: 'write' } },
+                        { id: 'node4', type: 'notification', category: 'action', x: 700, y: 100, width: 140, height: 70, properties: { message: 'Backup complete' } }
+                    ],
+                    connections: [
+                        { from: 'node1', to: 'node2' },
+                        { from: 'node2', to: 'node3' },
+                        { from: 'node3', to: 'node4' }
+                    ]
+                },
+                'email-report': {
+                    nodes: [
+                        { id: 'node1', type: 'schedule', category: 'trigger', x: 100, y: 100, width: 140, height: 70, properties: { cron: '0 9 * * 1-5' } },
+                        { id: 'node2', type: 'database', category: 'action', x: 300, y: 100, width: 140, height: 70, properties: { query: 'SELECT * FROM reports' } },
+                        { id: 'node3', type: 'transform', category: 'transform', x: 500, y: 100, width: 140, height: 70, properties: { format: 'html' } },
+                        { id: 'node4', type: 'email', category: 'action', x: 700, y: 100, width: 140, height: 70, properties: { subject: 'Daily Report' } }
+                    ],
+                    connections: [
+                        { from: 'node1', to: 'node2' },
+                        { from: 'node2', to: 'node3' },
+                        { from: 'node3', to: 'node4' }
+                    ]
+                }
+            };
+            
+            const template = templates[name];
+            if (template) {
+                builder.nodes = template.nodes;
+                builder.connections = template.connections;
+                builder.selectedNode = null;
+                builder.render();
+                builder.updatePropertyPanel();
+                builder.showToast(`Template loaded: ${name}`, 'success');
+            }
+        }
+
+        function selectWorkflow(name) {
+            document.querySelectorAll('#modalBody .component-item').forEach(item => {
+                item.classList.remove('selected');
+                if (item.querySelector('.component-name').textContent === name) {
+                    item.classList.add('selected');
+                }
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('modalTextarea');
+            if (textarea) {
+                textarea.select();
+                document.execCommand('copy');
+                builder.showToast('Copied to clipboard!', 'success');
+            }
+        }
+    </script>
 </body>
 </html>
