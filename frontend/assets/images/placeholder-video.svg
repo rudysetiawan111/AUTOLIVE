@@ -1,0 +1,26 @@
+<svg width="320" height="180" viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="placeholderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f7fafc"/>
+            <stop offset="100%" stop-color="#edf2f7"/>
+        </linearGradient>
+    </defs>
+    
+    <!-- Background -->
+    <rect width="320" height="180" fill="url(#placeholderGradient)"/>
+    
+    <!-- Video Icon -->
+    <circle cx="160" cy="90" r="40" fill="#cbd5e0"/>
+    <path d="M140 70L180 90L140 110V70Z" fill="#a0aec0"/>
+    
+    <!-- Text -->
+    <text x="160" y="140" font-family="Arial" font-size="14" fill="#718096" text-anchor="middle">
+        No Thumbnail
+    </text>
+    
+    <!-- Pattern -->
+    <pattern id="pattern" patternUnits="userSpaceOnUse" width="20" height="20">
+        <circle cx="10" cy="10" r="2" fill="#cbd5e0"/>
+    </pattern>
+    <rect width="320" height="180" fill="url(#pattern)" fill-opacity="0.2"/>
+</svg>
