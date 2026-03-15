@@ -1,19 +1,22 @@
 /**
  * Temporary Files Manager
- * Mengelola file temporary selama proses download/upload/processing
+ * Manages all temporary files during processing
  */
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
-const os = require('os');
+const Logger = require('../utils/logger');
+const EventEmitter = require('events');
 
-class TempManager {
+class TempManager extends EventEmitter {
     constructor() {
-        this.basePath = path.join(__dirname, '../temp');
-        this.systemTemp = os.tmpdir();
+        super();
+        this.basePath = path.join(__dirname);
+        this.tempFiles = new Map();
+        this.cleanupInterval = null;
         
-        // Subdirectories
+        // Initialize directories
         this.dirs = {
             downloads: path.join(this.basePath, 'downloads'),
             uploads: path.join(this.basePath, 'uploads'),
@@ -24,91 +27,64 @@ class TempManager {
             logs: path.join(this.basePath, 'logs')
         };
 
-        this.ensureDirectories();
-        
-        // Track temporary files
-        this.tempFiles = new Map();
-        this.cleanupInterval = null;
-        
-        // Start auto cleanup
         this.startAutoCleanup();
     }
 
     /**
-     * Memastikan direktori ada
+     * Create a new temporary file
      */
-    ensureDirectories() {
-        Object.values(this.dirs).forEach(dir => {
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-                console.log(`[Temp] Created directory: ${dir}`);
-            }
-        });
-    }
-
-    /**
-     * Membuat file temporary baru
-     */
-    createTempFile(options = {}) {
+    createFile(options = {}) {
         const {
             prefix = 'tmp',
-            suffix = '',
             extension = '.tmp',
             subDir = 'processing',
             content = null
         } = options;
 
-        const tempId = this.generateTempId();
+        const id = this.generateId();
         const timestamp = Date.now();
-        const random = crypto.randomBytes(4).toString('hex');
-        
-        const filename = `${prefix}_${timestamp}_${random}_${tempId}${extension}`;
+        const filename = `${prefix}_${timestamp}_${id}${extension}`;
         const filePath = path.join(this.dirs[subDir] || this.basePath, filename);
 
-        // Buat file kosong atau dengan content
+        // Create file
         if (content) {
             fs.writeFileSync(filePath, content);
         } else {
             fs.writeFileSync(filePath, '');
         }
 
-        // Track file
-        this.tempFiles.set(tempId, {
-            id: tempId,
+        const fileInfo = {
+            id,
             path: filePath,
             filename,
             size: content ? Buffer.byteLength(content) : 0,
             created: new Date().toISOString(),
             lastAccessed: new Date().toISOString(),
             subDir
-        });
-
-        return {
-            id: tempId,
-            path: filePath,
-            filename,
-            size: content ? Buffer.byteLength(content) : 0
         };
+
+        this.tempFiles.set(id, fileInfo);
+
+        return fileInfo;
     }
 
     /**
-     * Membuat direktori temporary
+     * Create a temporary directory
      */
-    createTempDir(options = {}) {
+    createDir(options = {}) {
         const {
             prefix = 'tmp_dir',
             subDir = 'processing'
         } = options;
 
-        const dirId = this.generateTempId();
-        const timestamp = Date.now();
-        const dirName = `${prefix}_${timestamp}_${dirId}`;
+        const id = this.generateId();
+        const dirName = `${prefix}_${Date.now()}_${id}`;
         const dirPath = path.join(this.dirs[subDir] || this.basePath, dirName);
 
-        fs.mkdirSync(dirPath, { recursive: true });
+        fs.ensureDirSync(dirPath);
 
         return {
-            id: dirId,
+            id,
             path: dirPath,
             name: dirName,
             created: new Date().toISOString()
@@ -116,88 +92,87 @@ class TempManager {
     }
 
     /**
-     * Menulis konten ke file temporary
+     * Write content to temporary file
      */
-    writeTempFile(tempId, content, options = {}) {
+    writeFile(id, content, options = {}) {
         const {
             append = false,
             encoding = 'utf8'
         } = options;
 
-        const tempFile = this.tempFiles.get(tempId);
-        if (!tempFile) {
-            throw new Error(`Temp file ${tempId} not found`);
+        const fileInfo = this.tempFiles.get(id);
+        if (!fileInfo) {
+            throw new Error(`Temp file ${id} not found`);
         }
 
         if (append) {
-            fs.appendFileSync(tempFile.path, content, { encoding });
+            fs.appendFileSync(fileInfo.path, content, { encoding });
         } else {
-            fs.writeFileSync(tempFile.path, content, { encoding });
+            fs.writeFileSync(fileInfo.path, content, { encoding });
         }
 
-        // Update size dan last accessed
-        const stat = fs.statSync(tempFile.path);
-        tempFile.size = stat.size;
-        tempFile.lastAccessed = new Date().toISOString();
+        const stat = fs.statSync(fileInfo.path);
+        fileInfo.size = stat.size;
+        fileInfo.lastAccessed = new Date().toISOString();
 
         return {
-            id: tempId,
-            size: tempFile.size,
-            path: tempFile.path
+            id,
+            size: fileInfo.size,
+            path: fileInfo.path
         };
     }
 
     /**
-     * Membaca file temporary
+     * Read from temporary file
      */
-    readTempFile(tempId, options = {}) {
+    readFile(id, options = {}) {
         const {
             encoding = 'utf8',
             start = 0,
             end = null
         } = options;
 
-        const tempFile = this.tempFiles.get(tempId);
-        if (!tempFile) {
-            throw new Error(`Temp file ${tempId} not found`);
+        const fileInfo = this.tempFiles.get(id);
+        if (!fileInfo) {
+            throw new Error(`Temp file ${id} not found`);
         }
 
-        tempFile.lastAccessed = new Date().toISOString();
+        fileInfo.lastAccessed = new Date().toISOString();
 
         if (start > 0 || end) {
-            // Baca sebagian file
-            const fd = fs.openSync(tempFile.path, 'r');
-            const buffer = Buffer.alloc((end || tempFile.size) - start);
+            // Partial read
+            const fd = fs.openSync(fileInfo.path, 'r');
+            const buffer = Buffer.alloc((end || fileInfo.size) - start);
             fs.readSync(fd, buffer, 0, buffer.length, start);
             fs.closeSync(fd);
             return buffer.toString(encoding);
         } else {
-            // Baca seluruh file
-            return fs.readFileSync(tempFile.path, { encoding });
+            // Full read
+            return fs.readFileSync(fileInfo.path, { encoding });
         }
     }
 
     /**
-     * Mendapatkan informasi file temporary
+     * Get file info
      */
-    getTempFileInfo(tempId) {
-        return this.tempFiles.get(tempId) || null;
+    getFile(id) {
+        return this.tempFiles.get(id) || null;
     }
 
     /**
-     * Menghapus file temporary
+     * Delete temporary file
      */
-    deleteTempFile(tempId) {
-        const tempFile = this.tempFiles.get(tempId);
-        if (!tempFile) {
+    deleteFile(id) {
+        const fileInfo = this.tempFiles.get(id);
+        if (!fileInfo) {
             return { success: false, error: 'File not found' };
         }
 
         try {
-            if (fs.existsSync(tempFile.path)) {
-                fs.unlinkSync(tempFile.path);
+            if (fs.existsSync(fileInfo.path)) {
+                fs.unlinkSync(fileInfo.path);
             }
-            this.tempFiles.delete(tempId);
+            this.tempFiles.delete(id);
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
@@ -205,76 +180,36 @@ class TempManager {
     }
 
     /**
-     * Menghapus direktori temporary
+     * Move temporary file to permanent location
      */
-    deleteTempDir(dirPath) {
-        try {
-            if (fs.existsSync(dirPath)) {
-                fs.rmdirSync(dirPath, { recursive: true });
-            }
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
-        }
-    }
-
-    /**
-     * Memindahkan file temporary ke lokasi permanen
-     */
-    moveToPermanent(tempId, destinationPath) {
-        const tempFile = this.tempFiles.get(tempId);
-        if (!tempFile) {
-            throw new Error(`Temp file ${tempId} not found`);
+    moveToPermanent(id, destinationPath) {
+        const fileInfo = this.tempFiles.get(id);
+        if (!fileInfo) {
+            throw new Error(`Temp file ${id} not found`);
         }
 
-        // Pastikan direktori tujuan ada
-        const destDir = path.dirname(destinationPath);
-        if (!fs.existsSync(destDir)) {
-            fs.mkdirSync(destDir, { recursive: true });
-        }
+        // Ensure destination directory exists
+        fs.ensureDirSync(path.dirname(destinationPath));
 
-        // Pindahkan file
-        fs.renameSync(tempFile.path, destinationPath);
+        // Move file
+        fs.renameSync(fileInfo.path, destinationPath);
         
-        // Hapus dari tracking
-        this.tempFiles.delete(tempId);
+        // Remove from tracking
+        this.tempFiles.delete(id);
 
         return {
             success: true,
             permanentPath: destinationPath,
-            size: tempFile.size
+            size: fileInfo.size
         };
     }
 
     /**
-     * Menyalin file ke temporary
+     * Create a chunk for large file upload
      */
-    copyToTemp(sourcePath, options = {}) {
-        const {
-            prefix = 'copy',
-            subDir = 'processing'
-        } = options;
-
-        const tempFile = this.createTempFile({
-            prefix,
-            extension: path.extname(sourcePath),
-            subDir
-        });
-
-        fs.copyFileSync(sourcePath, tempFile.path);
-
-        return tempFile;
-    }
-
-    /**
-     * Membuat file chunk untuk upload besar
-     */
-    createChunk(uploadId, chunkIndex, data, options = {}) {
+    createChunk(uploadId, chunkIndex, data) {
         const chunkDir = path.join(this.dirs.chunks, uploadId);
-        
-        if (!fs.existsSync(chunkDir)) {
-            fs.mkdirSync(chunkDir, { recursive: true });
-        }
+        fs.ensureDirSync(chunkDir);
 
         const chunkFile = path.join(chunkDir, `chunk_${chunkIndex.toString().padStart(6, '0')}`);
         fs.writeFileSync(chunkFile, data);
@@ -288,7 +223,7 @@ class TempManager {
     }
 
     /**
-     * Menggabungkan chunks
+     * Merge chunks into final file
      */
     mergeChunks(uploadId, totalChunks, destinationPath) {
         const chunkDir = path.join(this.dirs.chunks, uploadId);
@@ -297,13 +232,10 @@ class TempManager {
             throw new Error(`Chunk directory for ${uploadId} not found`);
         }
 
-        // Pastikan direktori tujuan ada
-        const destDir = path.dirname(destinationPath);
-        if (!fs.existsSync(destDir)) {
-            fs.mkdirSync(destDir, { recursive: true });
-        }
+        // Ensure destination directory exists
+        fs.ensureDirSync(path.dirname(destinationPath));
 
-        // Gabungkan chunks
+        // Merge chunks
         const writeStream = fs.createWriteStream(destinationPath);
         
         for (let i = 0; i < totalChunks; i++) {
@@ -314,8 +246,8 @@ class TempManager {
 
         writeStream.end();
 
-        // Bersihkan chunk directory
-        fs.rmdirSync(chunkDir, { recursive: true });
+        // Clean up chunks
+        fs.removeSync(chunkDir);
 
         return {
             success: true,
@@ -325,14 +257,14 @@ class TempManager {
     }
 
     /**
-     * Membersihkan file lama secara manual
+     * Clean up old temporary files
      */
-    cleanup(maxAge = 3600000) { // default 1 jam
+    cleanup(maxAge = 3600000) { // Default 1 hour
         const now = Date.now();
         let deletedCount = 0;
         let freedSpace = 0;
 
-        // Bersihkan tracked files
+        // Clean tracked files
         for (const [id, file] of this.tempFiles) {
             const age = now - new Date(file.lastAccessed).getTime();
             if (age > maxAge) {
@@ -346,29 +278,29 @@ class TempManager {
             }
         }
 
-        // Bersihkan untracked files di semua subdir
+        // Clean untracked files in all directories
         Object.values(this.dirs).forEach(dir => {
-            if (!fs.existsSync(dir)) return;
-            
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
-                
-                if (stat.isDirectory()) {
-                    // Skip chunk directories (handled separately)
-                    if (item !== 'chunks') {
-                        this.cleanupDirectory(fullPath, maxAge);
+            if (fs.existsSync(dir)) {
+                const items = fs.readdirSync(dir);
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
+                    
+                    if (stat.isDirectory()) {
+                        // Skip chunk directories (handled separately)
+                        if (item !== 'chunks') {
+                            this.cleanupDirectory(fullPath, maxAge);
+                        }
+                    } else {
+                        const age = now - stat.mtimeMs;
+                        if (age > maxAge) {
+                            freedSpace += stat.size;
+                            fs.unlinkSync(fullPath);
+                            deletedCount++;
+                        }
                     }
-                } else {
-                    const age = now - stat.mtimeMs;
-                    if (age > maxAge) {
-                        freedSpace += stat.size;
-                        fs.unlinkSync(fullPath);
-                        deletedCount++;
-                    }
-                }
-            });
+                });
+            }
         });
 
         return {
@@ -379,7 +311,7 @@ class TempManager {
     }
 
     /**
-     * Membersihkan direktori
+     * Clean up a directory recursively
      */
     cleanupDirectory(dirPath, maxAge) {
         if (!fs.existsSync(dirPath)) return;
@@ -394,7 +326,7 @@ class TempManager {
             if (stat.isDirectory()) {
                 this.cleanupDirectory(fullPath, maxAge);
                 
-                // Hapus folder jika kosong
+                // Remove empty directories
                 if (fs.readdirSync(fullPath).length === 0) {
                     fs.rmdirSync(fullPath);
                 }
@@ -408,22 +340,21 @@ class TempManager {
     }
 
     /**
-     * Memulai auto cleanup interval
+     * Start auto cleanup interval
      */
-    startAutoCleanup(interval = 3600000) { // default 1 jam
+    startAutoCleanup(interval = 3600000) { // Default 1 hour
         if (this.cleanupInterval) {
             clearInterval(this.cleanupInterval);
         }
 
         this.cleanupInterval = setInterval(() => {
-            console.log('[Temp] Running auto cleanup...');
             const result = this.cleanup();
-            console.log(`[Temp] Cleaned ${result.deletedCount} files (${result.freedSpace})`);
+            Logger.debug(`Auto cleanup completed: ${result.deletedCount} files removed, ${result.freedSpace} freed`);
         }, interval);
     }
 
     /**
-     * Menghentikan auto cleanup
+     * Stop auto cleanup
      */
     stopAutoCleanup() {
         if (this.cleanupInterval) {
@@ -433,52 +364,63 @@ class TempManager {
     }
 
     /**
-     * Mendapatkan statistik temporary storage
+     * Get storage statistics
      */
-    getStorageStats() {
+    getStats() {
         let totalSize = 0;
         let fileCount = 0;
-        let trackedCount = this.tempFiles.size;
+        const typeStats = {};
 
-        const scanDir = (dir) => {
-            if (!fs.existsSync(dir)) return;
-            
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
-                
-                if (stat.isDirectory()) {
-                    scanDir(fullPath);
-                } else {
-                    totalSize += stat.size;
-                    fileCount++;
-                }
-            });
-        };
-
-        Object.values(this.dirs).forEach(scanDir);
+        Object.entries(this.dirs).forEach(([type, dir]) => {
+            if (fs.existsSync(dir)) {
+                const stats = this.getDirectoryStats(dir);
+                typeStats[type] = stats.fileCount;
+                totalSize += stats.totalSize;
+                fileCount += stats.fileCount;
+            }
+        });
 
         return {
             totalSize: this.formatBytes(totalSize),
             totalSizeBytes: totalSize,
             fileCount,
-            trackedFiles: trackedCount,
-            tempPath: this.basePath,
-            systemTemp: this.systemTemp,
-            freeSpace: this.formatBytes(50 * 1024 * 1024 * 1024) // 50GB dummy
+            typeStats,
+            trackedFiles: this.tempFiles.size
         };
+    }
+
+    /**
+     * Get directory statistics
+     */
+    getDirectoryStats(dir) {
+        let totalSize = 0;
+        let fileCount = 0;
+
+        if (!fs.existsSync(dir)) return { totalSize, fileCount };
+
+        const items = fs.readdirSync(dir);
+        items.forEach(item => {
+            const fullPath = path.join(dir, item);
+            const stat = fs.statSync(fullPath);
+            
+            if (stat.isDirectory()) {
+                const subStats = this.getDirectoryStats(fullPath);
+                totalSize += subStats.totalSize;
+                fileCount += subStats.fileCount;
+            } else {
+                totalSize += stat.size;
+                fileCount++;
+            }
+        });
+
+        return { totalSize, fileCount };
     }
 
     /**
      * Generate unique ID
      */
-    generateTempId() {
-        return crypto
-            .createHash('md5')
-            .update(Date.now().toString() + Math.random())
-            .digest('hex')
-            .substring(0, 8);
+    generateId() {
+        return crypto.randomBytes(8).toString('hex');
     }
 
     /**
@@ -497,7 +439,7 @@ class TempManager {
      */
     destroy() {
         this.stopAutoCleanup();
-        this.cleanup(0); // Hapus semua
+        this.cleanup(0); // Remove all files
     }
 }
 
