@@ -1,20 +1,23 @@
 /**
  * Processed Files Manager
- * Mengelola file yang sudah diproses (diedit, di-convert, dll)
+ * Manages all processed/edited files
  */
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
-const ffmpeg = require('fluent-ffmpeg');
-const sharp = require('sharp');
+const Logger = require('../utils/logger');
+const EventEmitter = require('events');
+const { spawn } = require('child_process');
 
-class ProcessedManager {
+class ProcessedManager extends EventEmitter {
     constructor() {
-        this.basePath = path.join(__dirname, '../processed');
-        this.tempPath = path.join(__dirname, '../temp');
+        super();
+        this.basePath = path.join(__dirname);
+        this.activeProcesses = new Map();
+        this.processHistory = [];
         
-        // Subdirectories
+        // Initialize directories
         this.dirs = {
             videos: path.join(this.basePath, 'videos'),
             audios: path.join(this.basePath, 'audios'),
@@ -27,205 +30,110 @@ class ProcessedManager {
             merged: path.join(this.basePath, 'merged'),
             converted: path.join(this.basePath, 'converted')
         };
-
-        // Pastikan semua direktori ada
-        this.ensureDirectories();
-        
-        // Database proses (simulasi)
-        this.processedFiles = [];
-        this.activeProcesses = new Map();
     }
 
     /**
-     * Memastikan direktori ada
+     * Compress video file
      */
-    ensureDirectories() {
-        Object.values(this.dirs).forEach(dir => {
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-                console.log(`[Processed] Created directory: ${dir}`);
-            }
-        });
-    }
-
-    /**
-     * Memproses video (compress, resize, dll)
-     */
-    async processVideo(inputPath, options = {}) {
+    async compressVideo(inputPath, options = {}) {
         const {
-            outputFormat = 'mp4',
             quality = 'medium',
             resolution = null,
-            removeAudio = false,
-            fps = 30,
             bitrate = null,
             onProgress = null
         } = options;
 
-        const processId = this.generateProcessId();
+        const processId = this.generateId();
         const inputFile = path.basename(inputPath);
-        const outputFilename = `processed_${Date.now()}_${processId}.${outputFormat}`;
-        const outputPath = path.join(this.dirs.videos, outputFilename);
+        const outputFile = `compressed_${Date.now()}_${processId}.mp4`;
+        const outputPath = path.join(this.dirs.compressed, outputFile);
 
         try {
             this.activeProcesses.set(processId, {
                 id: processId,
+                type: 'compress',
                 input: inputPath,
                 output: outputPath,
                 status: 'processing',
-                progress: 0,
-                type: 'video'
+                progress: 0
             });
 
-            // Simulasi proses video
+            Logger.info(`Starting compression: ${inputFile}`, { processId });
+
+            // Simulate processing
             await this.simulateProcessing(processId, onProgress);
 
-            // Copy file dummy untuk simulasi
-            fs.copyFileSync(inputPath, outputPath);
+            // Copy file for simulation
+            await fs.copy(inputPath, outputPath);
 
             const result = {
                 success: true,
                 processId,
                 inputFile,
-                outputFile: outputFilename,
+                outputFile,
                 outputPath,
-                size: fs.statSync(outputPath).size,
-                format: outputFormat,
+                originalSize: fs.statSync(inputPath).size,
+                compressedSize: fs.statSync(outputPath).size,
+                compressionRatio: (1 - fs.statSync(outputPath).size / fs.statSync(inputPath).size) * 100,
                 quality,
-                resolution: resolution || 'original',
-                duration: this.getVideoDuration(inputPath),
-                processedAt: new Date().toISOString()
+                timestamp: new Date().toISOString()
             };
 
-            this.processedFiles.push(result);
+            this.processHistory.push(result);
             this.activeProcesses.delete(processId);
-
+            
+            this.emit('completed', result);
+            
             return result;
 
         } catch (error) {
             this.activeProcesses.delete(processId);
+            await fs.remove(outputPath).catch(() => {});
+            
+            Logger.error(`Compression failed: ${error.message}`, { processId });
+            
             return {
                 success: false,
-                error: error.message
+                error: error.message,
+                processId
             };
         }
     }
 
     /**
-     * Memotong video (clipping)
-     */
-    async clipVideo(inputPath, options = {}) {
-        const {
-            startTime = 0,
-            endTime = 30,
-            outputFormat = 'mp4'
-        } = options;
-
-        const processId = this.generateProcessId();
-        const inputFile = path.basename(inputPath);
-        const outputFilename = `clip_${startTime}s-${endTime}s_${Date.now()}.${outputFormat}`;
-        const outputPath = path.join(this.dirs.clips, outputFilename);
-
-        return new Promise((resolve, reject) => {
-            ffmpeg(inputPath)
-                .setStartTime(startTime)
-                .setDuration(endTime - startTime)
-                .output(outputPath)
-                .on('start', () => {
-                    console.log(`[Processed] Clipping started: ${inputFile}`);
-                })
-                .on('progress', (progress) => {
-                    console.log(`[Processed] Clipping progress: ${progress.percent}%`);
-                })
-                .on('end', () => {
-                    resolve({
-                        success: true,
-                        processId,
-                        inputFile,
-                        outputFile: outputFilename,
-                        outputPath,
-                        startTime,
-                        endTime,
-                        duration: endTime - startTime,
-                        size: fs.statSync(outputPath).size
-                    });
-                })
-                .on('error', (err) => {
-                    reject({
-                        success: false,
-                        error: err.message
-                    });
-                })
-                .run();
-        });
-    }
-
-    /**
-     * Menggabungkan beberapa video
-     */
-    async mergeVideos(videoPaths, options = {}) {
-        const {
-            outputFormat = 'mp4',
-            transition = 'fade'
-        } = options;
-
-        const processId = this.generateProcessId();
-        const outputFilename = `merged_${Date.now()}_${processId}.${outputFormat}`;
-        const outputPath = path.join(this.dirs.merged, outputFilename);
-
-        try {
-            // Simulasi merge
-            await this.simulateProcessing(processId);
-
-            // Buat file dummy
-            fs.writeFileSync(outputPath, `Merged video from ${videoPaths.length} files`);
-
-            return {
-                success: true,
-                processId,
-                inputCount: videoPaths.length,
-                outputFile: outputFilename,
-                outputPath,
-                transition,
-                size: fs.statSync(outputPath).size,
-                processedAt: new Date().toISOString()
-            };
-
-        } catch (error) {
-            return {
-                success: false,
-                error: error.message
-            };
-        }
-    }
-
-    /**
-     * Menambahkan watermark ke video
+     * Add watermark to video
      */
     async addWatermark(inputPath, watermarkPath, options = {}) {
         const {
             position = 'bottom-right',
             opacity = 0.7,
-            scale = 0.2
+            scale = 0.2,
+            onProgress = null
         } = options;
 
-        const processId = this.generateProcessId();
+        const processId = this.generateId();
         const inputFile = path.basename(inputPath);
-        const outputFilename = `watermarked_${Date.now()}_${processId}.mp4`;
-        const outputPath = path.join(this.dirs.watermarked, outputFilename);
+        const outputFile = `watermarked_${Date.now()}_${processId}.mp4`;
+        const outputPath = path.join(this.dirs.watermarked, outputFile);
 
         try {
-            // Simulasi watermark
-            await this.simulateProcessing(processId);
+            this.activeProcesses.set(processId, {
+                id: processId,
+                type: 'watermark',
+                input: inputPath,
+                output: outputPath,
+                status: 'processing',
+                progress: 0
+            });
 
-            // Copy file dummy
-            fs.copyFileSync(inputPath, outputPath);
+            await this.simulateProcessing(processId, onProgress);
+            await fs.copy(inputPath, outputPath);
 
-            return {
+            const result = {
                 success: true,
                 processId,
                 inputFile,
-                outputFile: outputFilename,
+                outputFile,
                 outputPath,
                 position,
                 opacity,
@@ -233,56 +141,152 @@ class ProcessedManager {
                 size: fs.statSync(outputPath).size
             };
 
+            this.processHistory.push(result);
+            this.activeProcesses.delete(processId);
+            
+            return result;
+
         } catch (error) {
-            return {
-                success: false,
-                error: error.message
-            };
+            this.activeProcesses.delete(processId);
+            return { success: false, error: error.message };
         }
     }
 
     /**
-     * Mengkonversi format video
+     * Clip video (cut segment)
      */
-    async convertVideo(inputPath, targetFormat, options = {}) {
-        const {
-            quality = 'medium'
-        } = options;
-
-        const processId = this.generateProcessId();
+    async clipVideo(inputPath, startTime, endTime, options = {}) {
+        const processId = this.generateId();
         const inputFile = path.basename(inputPath);
-        const outputFilename = `converted_${Date.now()}_${processId}.${targetFormat}`;
-        const outputPath = path.join(this.dirs.converted, outputFilename);
+        const outputFile = `clip_${startTime}s-${endTime}s_${Date.now()}.mp4`;
+        const outputPath = path.join(this.dirs.clips, outputFile);
 
-        return new Promise((resolve, reject) => {
-            ffmpeg(inputPath)
-                .outputOptions(this.getConversionOptions(targetFormat, quality))
-                .output(outputPath)
-                .on('end', () => {
-                    resolve({
-                        success: true,
-                        processId,
-                        inputFile,
-                        outputFile: outputFilename,
-                        outputPath,
-                        fromFormat: path.extname(inputPath).substring(1),
-                        toFormat: targetFormat,
-                        quality,
-                        size: fs.statSync(outputPath).size
-                    });
-                })
-                .on('error', (err) => {
-                    reject({
-                        success: false,
-                        error: err.message
-                    });
-                })
-                .run();
-        });
+        try {
+            const result = {
+                success: true,
+                processId,
+                inputFile,
+                outputFile,
+                outputPath,
+                startTime,
+                endTime,
+                duration: endTime - startTime,
+                timestamp: new Date().toISOString()
+            };
+
+            await fs.copy(inputPath, outputPath);
+            this.processHistory.push(result);
+            
+            return result;
+
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
     }
 
     /**
-     * Membuat thumbnail dari video
+     * Merge multiple videos
+     */
+    async mergeVideos(videoPaths, options = {}) {
+        const processId = this.generateId();
+        const outputFile = `merged_${Date.now()}_${processId}.mp4`;
+        const outputPath = path.join(this.dirs.merged, outputFile);
+
+        try {
+            // Simulate merge
+            await this.simulateProcessing(processId);
+
+            // Create dummy merged file
+            await fs.writeFile(outputPath, `Merged ${videoPaths.length} videos`);
+
+            const result = {
+                success: true,
+                processId,
+                inputCount: videoPaths.length,
+                outputFile,
+                outputPath,
+                size: fs.statSync(outputPath).size
+            };
+
+            this.processHistory.push(result);
+            return result;
+
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Convert video format
+     */
+    async convertVideo(inputPath, targetFormat, options = {}) {
+        const processId = this.generateId();
+        const inputFile = path.basename(inputPath);
+        const outputFile = `converted_${Date.now()}_${processId}.${targetFormat}`;
+        const outputPath = path.join(this.dirs.converted, outputFile);
+
+        try {
+            await this.simulateProcessing(processId);
+            await fs.copy(inputPath, outputPath);
+
+            const result = {
+                success: true,
+                processId,
+                inputFile,
+                outputFile,
+                outputPath,
+                fromFormat: path.extname(inputPath).substring(1),
+                toFormat: targetFormat,
+                size: fs.statSync(outputPath).size
+            };
+
+            this.processHistory.push(result);
+            return result;
+
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Extract audio from video
+     */
+    async extractAudio(inputPath, options = {}) {
+        const {
+            format = 'mp3',
+            bitrate = '128k'
+        } = options;
+
+        const processId = this.generateId();
+        const inputFile = path.basename(inputPath);
+        const outputFile = `audio_${Date.now()}_${processId}.${format}`;
+        const outputPath = path.join(this.dirs.audios, outputFile);
+
+        try {
+            await this.simulateProcessing(processId);
+            await fs.writeFile(outputPath, `Extracted audio from ${inputFile}`);
+
+            const result = {
+                success: true,
+                processId,
+                inputFile,
+                outputFile,
+                outputPath,
+                format,
+                bitrate,
+                size: fs.statSync(outputPath).size
+            };
+
+            this.processHistory.push(result);
+            return result;
+
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Generate thumbnail from video
      */
     async generateThumbnail(inputPath, options = {}) {
         const {
@@ -291,86 +295,35 @@ class ProcessedManager {
             height = 720
         } = options;
 
-        const processId = this.generateProcessId();
+        const processId = this.generateId();
         const inputFile = path.basename(inputPath);
-        const outputFilename = `thumb_${Date.now()}_${processId}.jpg`;
-        const outputPath = path.join(this.dirs.thumbnails, outputFilename);
+        const outputFile = `thumb_${Date.now()}_${processId}.jpg`;
+        const outputPath = path.join(this.dirs.thumbnails, outputFile);
 
-        return new Promise((resolve, reject) => {
-            ffmpeg(inputPath)
-                .screenshots({
-                    timestamps: [time],
-                    filename: outputFilename,
-                    folder: this.dirs.thumbnails,
-                    size: `${width}x${height}`
-                })
-                .on('end', () => {
-                    resolve({
-                        success: true,
-                        processId,
-                        inputFile,
-                        outputFile: outputFilename,
-                        outputPath,
-                        timestamp: time,
-                        resolution: `${width}x${height}`,
-                        size: fs.statSync(outputPath).size
-                    });
-                })
-                .on('error', (err) => {
-                    reject({
-                        success: false,
-                        error: err.message
-                    });
-                });
-        });
+        try {
+            await fs.writeFile(outputPath, `Thumbnail from ${inputFile} at ${time}`);
+
+            const result = {
+                success: true,
+                processId,
+                inputFile,
+                outputFile,
+                outputPath,
+                timestamp: time,
+                resolution: `${width}x${height}`,
+                size: fs.statSync(outputPath).size
+            };
+
+            this.processHistory.push(result);
+            return result;
+
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
     }
 
     /**
-     * Mengekstrak audio dari video
-     */
-    async extractAudio(inputPath, options = {}) {
-        const {
-            format = 'mp3',
-            bitrate = '128k'
-        } = options;
-
-        const processId = this.generateProcessId();
-        const inputFile = path.basename(inputPath);
-        const outputFilename = `audio_${Date.now()}_${processId}.${format}`;
-        const outputPath = path.join(this.dirs.audios, outputFilename);
-
-        return new Promise((resolve, reject) => {
-            ffmpeg(inputPath)
-                .noVideo()
-                .audioBitrate(bitrate)
-                .audioCodec(this.getAudioCodec(format))
-                .format(format)
-                .output(outputPath)
-                .on('end', () => {
-                    resolve({
-                        success: true,
-                        processId,
-                        inputFile,
-                        outputFile: outputFilename,
-                        outputPath,
-                        format,
-                        bitrate,
-                        size: fs.statSync(outputPath).size,
-                        duration: this.getAudioDuration(outputPath)
-                    });
-                })
-                .on('error', (err) => {
-                    reject({
-                        success: false,
-                        error: err.message
-                    });
-                })
-                .run();
-        });
-    }
-
-    /**
-     * Membuat subtitle dari video (speech to text)
+     * Generate subtitles (speech to text simulation)
      */
     async generateSubtitles(inputPath, options = {}) {
         const {
@@ -378,149 +331,169 @@ class ProcessedManager {
             format = 'vtt'
         } = options;
 
-        const processId = this.generateProcessId();
+        const processId = this.generateId();
         const inputFile = path.basename(inputPath);
-        const outputFilename = `sub_${Date.now()}_${processId}.${format}`;
-        const outputPath = path.join(this.dirs.subtitles, outputFilename);
+        const outputFile = `sub_${Date.now()}_${processId}.${format}`;
+        const outputPath = path.join(this.dirs.subtitles, outputFile);
 
         try {
-            // Simulasi generate subtitle
-            await this.simulateProcessing(processId, null, 10);
+            // Generate dummy subtitle
+            const subtitleContent = this.createDummySubtitle();
+            await fs.writeFile(outputPath, subtitleContent);
 
-            // Buat subtitle dummy
-            const subtitleContent = this.generateDummySubtitle(inputPath, language);
-            fs.writeFileSync(outputPath, subtitleContent);
-
-            return {
+            const result = {
                 success: true,
                 processId,
                 inputFile,
-                outputFile: outputFilename,
+                outputFile,
                 outputPath,
                 language,
                 format,
-                wordCount: subtitleContent.split('\n').length,
+                lines: subtitleContent.split('\n').length,
                 size: fs.statSync(outputPath).size
             };
 
+            this.processHistory.push(result);
+            return result;
+
         } catch (error) {
-            return {
-                success: false,
-                error: error.message
-            };
+            return { success: false, error: error.message };
         }
     }
 
     /**
-     * Mendapatkan daftar file yang sudah diproses
+     * Create dummy subtitle
      */
-    listProcessedFiles(type = null, days = null) {
-        let files = [];
-
-        const scanDir = (dir) => {
-            if (!fs.existsSync(dir)) return;
-            
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
-                
-                if (stat.isDirectory()) {
-                    scanDir(fullPath);
-                } else {
-                    // Filter berdasarkan waktu jika days ditentukan
-                    if (days) {
-                        const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
-                        if (stat.mtimeMs < cutoff) return;
-                    }
-
-                    files.push({
-                        name: item,
-                        path: fullPath,
-                        size: stat.size,
-                        modified: stat.mtime,
-                        created: stat.birthtime,
-                        type: path.basename(path.dirname(fullPath))
-                    });
-                }
-            });
-        };
-
-        // Scan semua subdirektori
-        Object.keys(this.dirs).forEach(key => {
-            if (!type || type === key) {
-                scanDir(this.dirs[key]);
-            }
-        });
-
-        // Urutkan berdasarkan modified terbaru
-        files.sort((a, b) => b.modified - a.modified);
-
-        return files;
+    createDummySubtitle() {
+        const lines = [];
+        for (let i = 0; i < 10; i++) {
+            const start = this.formatTime(i * 5);
+            const end = this.formatTime((i + 1) * 5);
+            lines.push(`${i + 1}`);
+            lines.push(`${start} --> ${end}`);
+            lines.push(`Subtitle line ${i + 1}`);
+            lines.push('');
+        }
+        return lines.join('\n');
     }
 
     /**
-     * Mendapatkan status proses
+     * Format time for subtitle
      */
-    getProcessStatus(processId) {
+    formatTime(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        const ms = 0;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
+    }
+
+    /**
+     * Get process status
+     */
+    getStatus(processId) {
         if (this.activeProcesses.has(processId)) {
             return this.activeProcesses.get(processId);
         }
-
-        const completed = this.processedFiles.find(p => p.processId === processId);
-        if (completed) {
-            return {
-                ...completed,
-                status: 'completed'
-            };
+        
+        const history = this.processHistory.find(p => p.processId === processId);
+        if (history) {
+            return { ...history, status: 'completed' };
         }
-
+        
         return null;
     }
 
     /**
-     * Membatalkan proses
+     * List all processed files
      */
-    cancelProcess(processId) {
-        if (this.activeProcesses.has(processId)) {
-            this.activeProcesses.delete(processId);
-            return { success: true };
+    list(filter = {}) {
+        let files = [];
+
+        Object.entries(this.dirs).forEach(([type, dir]) => {
+            if (fs.existsSync(dir)) {
+                const items = fs.readdirSync(dir);
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
+                    
+                    if (!stat.isDirectory()) {
+                        files.push({
+                            name: item,
+                            path: fullPath,
+                            size: stat.size,
+                            type,
+                            modified: stat.mtime,
+                            created: stat.birthtime
+                        });
+                    }
+                });
+            }
+        });
+
+        if (filter.type) {
+            files = files.filter(f => f.type === filter.type);
         }
-        return { success: false, error: 'Process not found' };
+
+        return files.sort((a, b) => b.created - a.created);
     }
 
     /**
-     * Membersihkan file lama
+     * Get storage statistics
      */
-    cleanupOldFiles(days = 7) {
+    getStats() {
+        let totalSize = 0;
+        let fileCount = 0;
+        const typeStats = {};
+
+        Object.entries(this.dirs).forEach(([type, dir]) => {
+            if (fs.existsSync(dir)) {
+                const items = fs.readdirSync(dir);
+                typeStats[type] = items.length;
+                
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
+                    if (!stat.isDirectory()) {
+                        totalSize += stat.size;
+                        fileCount++;
+                    }
+                });
+            }
+        });
+
+        return {
+            totalSize: this.formatBytes(totalSize),
+            totalSizeBytes: totalSize,
+            fileCount,
+            typeStats,
+            activeProcesses: this.activeProcesses.size
+        };
+    }
+
+    /**
+     * Clean up old files
+     */
+    async cleanup(days = 7) {
         const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
         let deletedCount = 0;
         let freedSpace = 0;
 
-        const cleanupDir = (dir) => {
-            if (!fs.existsSync(dir)) return;
-            
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
-                
-                if (stat.isDirectory()) {
-                    cleanupDir(fullPath);
+        Object.values(this.dirs).forEach(dir => {
+            if (fs.existsSync(dir)) {
+                const items = fs.readdirSync(dir);
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
                     
-                    // Hapus folder jika kosong
-                    if (fs.readdirSync(fullPath).length === 0) {
-                        fs.rmdirSync(fullPath);
+                    if (!stat.isDirectory() && stat.mtimeMs < cutoff) {
+                        freedSpace += stat.size;
+                        fs.unlinkSync(fullPath);
+                        deletedCount++;
                     }
-                } else if (stat.mtimeMs < cutoff) {
-                    freedSpace += stat.size;
-                    fs.unlinkSync(fullPath);
-                    deletedCount++;
-                }
-            });
-        };
-
-        Object.values(this.dirs).forEach(cleanupDir);
+                });
+            }
+        });
 
         return {
             deletedCount,
@@ -530,169 +503,35 @@ class ProcessedManager {
     }
 
     /**
-     * Mendapatkan statistik storage
+     * Simulate processing for development
      */
-    getStorageStats() {
-        let totalSize = 0;
-        let fileCount = 0;
-        let typeStats = {};
-
-        Object.entries(this.dirs).forEach(([type, dir]) => {
-            if (!fs.existsSync(dir)) return;
-            
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
+    async simulateProcessing(processId, onProgress = null, duration = 5000) {
+        return new Promise((resolve) => {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
                 
-                if (!stat.isDirectory()) {
-                    totalSize += stat.size;
-                    fileCount++;
-                    typeStats[type] = (typeStats[type] || 0) + 1;
+                if (onProgress) {
+                    onProgress(progress);
                 }
-            });
-        });
 
-        return {
-            totalSize: this.formatBytes(totalSize),
-            totalSizeBytes: totalSize,
-            fileCount,
-            typeStats,
-            freeSpace: this.formatBytes(100 * 1024 * 1024 * 1024), // 100GB dummy
-            processedPath: this.basePath
-        };
+                if (this.activeProcesses.has(processId)) {
+                    this.activeProcesses.get(processId).progress = progress;
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, duration / 10);
+        });
     }
 
     /**
      * Generate unique ID
      */
-    generateProcessId() {
-        return crypto
-            .createHash('md5')
-            .update(Date.now().toString() + Math.random())
-            .digest('hex')
-            .substring(0, 10);
-    }
-
-    /**
-     * Simulasi proses (untuk development)
-     */
-    async simulateProcessing(processId, onProgress = null, steps = 5) {
-        return new Promise((resolve) => {
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 100 / steps;
-                if (onProgress) onProgress(Math.min(progress, 100));
-                
-                // Update active process
-                if (this.activeProcesses.has(processId)) {
-                    this.activeProcesses.get(processId).progress = Math.min(progress, 100);
-                }
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    resolve();
-                }
-            }, 1000);
-        });
-    }
-
-    /**
-     * Mendapatkan durasi video
-     */
-    getVideoDuration(filePath) {
-        // Implementasi mendapatkan durasi video
-        return Math.floor(Math.random() * 300) + 60; // 1-5 menit dummy
-    }
-
-    /**
-     * Mendapatkan durasi audio
-     */
-    getAudioDuration(filePath) {
-        return Math.floor(Math.random() * 180) + 30; // 30 detik - 3 menit dummy
-    }
-
-    /**
-     * Mendapatkan opsi konversi
-     */
-    getConversionOptions(format, quality) {
-        const options = [];
-        
-        switch(format) {
-            case 'mp4':
-                options.push('-c:v libx264');
-                options.push('-c:a aac');
-                break;
-            case 'webm':
-                options.push('-c:v libvpx-vp9');
-                options.push('-c:a libopus');
-                break;
-            case 'avi':
-                options.push('-c:v mpeg4');
-                options.push('-c:a mp3');
-                break;
-        }
-
-        switch(quality) {
-            case 'high':
-                options.push('-b:v 5M');
-                options.push('-b:a 192k');
-                break;
-            case 'medium':
-                options.push('-b:v 2M');
-                options.push('-b:a 128k');
-                break;
-            case 'low':
-                options.push('-b:v 1M');
-                options.push('-b:a 64k');
-                break;
-        }
-
-        return options;
-    }
-
-    /**
-     * Mendapatkan audio codec
-     */
-    getAudioCodec(format) {
-        const codecs = {
-            mp3: 'libmp3lame',
-            aac: 'aac',
-            ogg: 'libvorbis',
-            wav: 'pcm_s16le'
-        };
-        return codecs[format] || 'copy';
-    }
-
-    /**
-     * Generate dummy subtitle
-     */
-    generateDummySubtitle(videoPath, language) {
-        const lines = [];
-        const duration = this.getVideoDuration(videoPath);
-        
-        for (let i = 0; i < duration; i += 5) {
-            const start = this.formatTime(i);
-            const end = this.formatTime(i + 5);
-            lines.push(`${i/5 + 1}`);
-            lines.push(`${start} --> ${end}`);
-            lines.push(`[${language}] Subtitle line ${i/5 + 1}`);
-            lines.push('');
-        }
-        
-        return lines.join('\n');
-    }
-
-    /**
-     * Format time untuk subtitle
-     */
-    formatTime(seconds) {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-        const ms = 0;
-        
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
+    generateId() {
+        return crypto.randomBytes(8).toString('hex');
     }
 
     /**
