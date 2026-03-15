@@ -1,18 +1,24 @@
 /**
  * Upload Manager
- * Mengelola file yang akan di-upload ke platform
+ * Manages all files queued for upload to platforms
  */
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
+const Logger = require('../utils/logger');
+const EventEmitter = require('events');
 
-class UploadManager {
+class UploadManager extends EventEmitter {
     constructor() {
-        this.basePath = path.join(__dirname, '../uploads');
-        this.tempPath = path.join(__dirname, '../temp');
+        super();
+        this.basePath = path.join(__dirname);
+        this.uploadQueue = [];
+        this.activeUploads = new Map();
+        this.uploadHistory = [];
+        this.maxConcurrent = 3;
         
-        // Subdirectories
+        // Initialize directories
         this.dirs = {
             pending: path.join(this.basePath, 'pending'),
             uploading: path.join(this.basePath, 'uploading'),
@@ -24,30 +30,12 @@ class UploadManager {
             facebook: path.join(this.basePath, 'facebook'),
             metadata: path.join(this.basePath, 'metadata')
         };
-
-        this.ensureDirectories();
-        
-        this.activeUploads = new Map();
-        this.uploadQueue = [];
-        this.completedUploads = [];
     }
 
     /**
-     * Memastikan direktori ada
+     * Add file to upload queue
      */
-    ensureDirectories() {
-        Object.values(this.dirs).forEach(dir => {
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-                console.log(`[Uploads] Created directory: ${dir}`);
-            }
-        });
-    }
-
-    /**
-     * Menambahkan file ke antrian upload
-     */
-    async queueUpload(filePath, options = {}) {
+    async queue(filePath, options = {}) {
         const {
             platform = 'youtube',
             title = '',
@@ -59,18 +47,18 @@ class UploadManager {
             metadata = {}
         } = options;
 
-        const uploadId = this.generateUploadId();
+        const uploadId = this.generateId();
         const fileName = path.basename(filePath);
-        const targetPath = path.join(this.dirs.pending, `${uploadId}_${fileName}`);
+        const pendingPath = path.join(this.dirs.pending, `${uploadId}_${fileName}`);
 
         try {
-            // Copy file ke pending folder
-            fs.copyFileSync(filePath, targetPath);
+            // Copy file to pending directory
+            await fs.copy(filePath, pendingPath);
 
             const queueItem = {
                 id: uploadId,
                 originalPath: filePath,
-                currentPath: targetPath,
+                currentPath: pendingPath,
                 fileName,
                 fileSize: fs.statSync(filePath).size,
                 platform,
@@ -83,11 +71,12 @@ class UploadManager {
                 metadata,
                 status: 'queued',
                 createdAt: new Date().toISOString(),
-                retryCount: 0,
-                maxRetries: 3
+                retryCount: 0
             };
 
             this.uploadQueue.push(queueItem);
+            
+            Logger.info(`File queued for upload: ${fileName}`, { uploadId, platform });
 
             return {
                 success: true,
@@ -96,6 +85,7 @@ class UploadManager {
             };
 
         } catch (error) {
+            Logger.error(`Failed to queue file: ${error.message}`);
             return {
                 success: false,
                 error: error.message
@@ -104,15 +94,12 @@ class UploadManager {
     }
 
     /**
-     * Memulai proses upload
+     * Start upload process
      */
-    async startUpload(uploadId, options = {}) {
+    async start(uploadId, options = {}) {
         const queueItem = this.uploadQueue.find(item => item.id === uploadId);
         if (!queueItem) {
-            return {
-                success: false,
-                error: 'Upload not found in queue'
-            };
+            return { success: false, error: 'Upload not found in queue' };
         }
 
         const {
@@ -122,16 +109,15 @@ class UploadManager {
         } = options;
 
         try {
-            // Update status
+            // Move to uploading directory
             queueItem.status = 'uploading';
             queueItem.startedAt = new Date().toISOString();
 
-            // Pindahkan ke folder uploading
             const uploadingPath = path.join(this.dirs.uploading, path.basename(queueItem.currentPath));
-            fs.renameSync(queueItem.currentPath, uploadingPath);
+            await fs.move(queueItem.currentPath, uploadingPath, { overwrite: true });
             queueItem.currentPath = uploadingPath;
 
-            // Simulasi upload
+            // Simulate upload
             const uploadPromise = this.performUpload(queueItem, {
                 onProgress,
                 onComplete,
@@ -145,33 +131,47 @@ class UploadManager {
 
             const result = await uploadPromise;
 
-            // Pindahkan ke completed
-            const completedPath = path.join(
-                this.dirs[result.success ? 'completed' : 'failed'],
-                path.basename(queueItem.currentPath)
-            );
-            fs.renameSync(queueItem.currentPath, completedPath);
+            // Move to appropriate directory based on result
+            const destDir = result.success ? this.dirs.completed : this.dirs.failed;
+            const destPath = path.join(destDir, path.basename(queueItem.currentPath));
+            await fs.move(queueItem.currentPath, destPath, { overwrite: true });
 
-            this.completedUploads.push({
+            const uploadRecord = {
                 ...queueItem,
                 ...result,
                 completedAt: new Date().toISOString(),
-                finalPath: completedPath
-            });
+                finalPath: destPath
+            };
 
+            this.uploadHistory.push(uploadRecord);
             this.activeUploads.delete(uploadId);
+            
+            // Also save to platform-specific directory
+            if (result.success) {
+                const platformPath = path.join(this.dirs[queueItem.platform], path.basename(destPath));
+                await fs.copy(destPath, platformPath);
+            }
 
-            return result;
+            this.emit('completed', uploadRecord);
+            
+            return {
+                success: true,
+                ...uploadRecord
+            };
 
         } catch (error) {
-            // Pindahkan ke failed
-            const failedPath = path.join(this.dirs.failed, path.basename(queueItem.currentPath));
-            if (fs.existsSync(queueItem.currentPath)) {
-                fs.renameSync(queueItem.currentPath, failedPath);
+            // Move to failed directory
+            if (queueItem.currentPath && fs.existsSync(queueItem.currentPath)) {
+                const failedPath = path.join(this.dirs.failed, path.basename(queueItem.currentPath));
+                await fs.move(queueItem.currentPath, failedPath, { overwrite: true }).catch(() => {});
             }
 
             this.activeUploads.delete(uploadId);
-
+            
+            Logger.error(`Upload failed: ${error.message}`, { uploadId });
+            
+            this.emit('error', { uploadId, error: error.message });
+            
             return {
                 success: false,
                 error: error.message,
@@ -181,14 +181,10 @@ class UploadManager {
     }
 
     /**
-     * Simulasi proses upload ke platform
+     * Perform actual upload simulation
      */
     async performUpload(queueItem, callbacks) {
-        const {
-            onProgress,
-            onComplete,
-            onError
-        } = callbacks;
+        const { onProgress, onComplete, onError } = callbacks;
 
         return new Promise((resolve, reject) => {
             let progress = 0;
@@ -206,6 +202,11 @@ class UploadManager {
                     });
                 }
 
+                this.activeUploads.set(queueItem.id, {
+                    ...this.activeUploads.get(queueItem.id),
+                    progress: Math.min(progress, 100)
+                });
+
                 if (progress >= 100) {
                     clearInterval(interval);
 
@@ -218,8 +219,7 @@ class UploadManager {
                         views: 0,
                         likes: 0,
                         comments: 0,
-                        uploadedAt: new Date().toISOString(),
-                        processingTime: Math.floor(Math.random() * 30) + 10 // 10-40 detik
+                        uploadedAt: new Date().toISOString()
                     };
 
                     if (onComplete) onComplete(result);
@@ -227,7 +227,7 @@ class UploadManager {
                 }
             }, 500);
 
-            // Simulasi error (5% chance)
+            // Simulate random failure (5% chance)
             if (Math.random() < 0.05) {
                 clearInterval(interval);
                 const error = new Error('Upload failed due to network error');
@@ -238,48 +238,10 @@ class UploadManager {
     }
 
     /**
-     * Upload batch (multiple files)
+     * Schedule upload for later
      */
-    async uploadBatch(filePaths, options = {}) {
-        const {
-            concurrent = 3,
-            ...uploadOptions
-        } = options;
-
-        const results = [];
-        
-        // Queue semua file
-        for (const filePath of filePaths) {
-            const queueResult = await this.queueUpload(filePath, uploadOptions);
-            results.push(queueResult);
-        }
-
-        // Upload concurrent
-        const uploadPromises = [];
-        for (let i = 0; i < Math.min(concurrent, results.length); i++) {
-            if (results[i].success) {
-                uploadPromises.push(this.startUpload(results[i].uploadId, uploadOptions));
-            }
-        }
-
-        const uploadResults = await Promise.allSettled(uploadPromises);
-
-        return {
-            total: filePaths.length,
-            queued: results.filter(r => r.success).length,
-            failed: results.filter(r => !r.success).length,
-            uploads: uploadResults.map((r, i) => ({
-                file: filePaths[i],
-                ...r
-            }))
-        };
-    }
-
-    /**
-     * Menjadwalkan upload
-     */
-    async scheduleUpload(filePath, scheduleTime, options = {}) {
-        const queueResult = await this.queueUpload(filePath, {
+    async schedule(filePath, scheduleTime, options = {}) {
+        const queueResult = await this.queue(filePath, {
             ...options,
             scheduleTime
         });
@@ -291,134 +253,193 @@ class UploadManager {
         const delay = new Date(scheduleTime) - new Date();
         
         setTimeout(() => {
-            this.startUpload(queueResult.uploadId, options);
+            this.start(queueResult.uploadId, options);
         }, delay);
 
         return {
             success: true,
             uploadId: queueResult.uploadId,
             scheduledTime: scheduleTime,
-            delay: Math.floor(delay / 1000) + ' detik'
+            delay: Math.floor(delay / 1000) + ' seconds'
         };
     }
 
     /**
-     * Mendapatkan status upload
+     * Get upload status
      */
-    getUploadStatus(uploadId) {
-        // Cek di active uploads
+    getStatus(uploadId) {
         if (this.activeUploads.has(uploadId)) {
             return this.activeUploads.get(uploadId);
         }
 
-        // Cek di queue
         const queued = this.uploadQueue.find(u => u.id === uploadId);
         if (queued) {
             return queued;
         }
 
-        // Cek di completed
-        const completed = this.completedUploads.find(u => u.uploadId === uploadId);
-        if (completed) {
-            return completed;
+        const history = this.uploadHistory.find(u => u.uploadId === uploadId);
+        if (history) {
+            return history;
         }
 
         return null;
     }
 
     /**
-     * Membatalkan upload
+     * Cancel upload
      */
-    cancelUpload(uploadId) {
+    cancel(uploadId) {
         if (this.activeUploads.has(uploadId)) {
             this.activeUploads.delete(uploadId);
-            
-            // Hapus file
-            const queueItem = this.uploadQueue.find(u => u.id === uploadId);
-            if (queueItem && fs.existsSync(queueItem.currentPath)) {
-                fs.unlinkSync(queueItem.currentPath);
-            }
-
             return { success: true };
         }
 
-        return { success: false, error: 'Upload not found or already completed' };
+        const index = this.uploadQueue.findIndex(u => u.id === uploadId);
+        if (index !== -1) {
+            const [removed] = this.uploadQueue.splice(index, 1);
+            fs.unlink(removed.currentPath).catch(() => {});
+            return { success: true };
+        }
+
+        return { success: false, error: 'Upload not found' };
     }
 
     /**
-     * Mendapatkan daftar upload
+     * List all uploads
      */
-    listUploads(status = null, platform = null) {
+    list(filter = {}) {
         let uploads = [];
 
-        // Dari queue
+        // Add queued uploads
         this.uploadQueue.forEach(item => {
-            if (!status || item.status === status) {
-                if (!platform || item.platform === platform) {
-                    uploads.push({ ...item, source: 'queue' });
-                }
-            }
+            uploads.push({
+                ...item,
+                source: 'queue'
+            });
         });
 
-        // Dari completed
-        this.completedUploads.forEach(item => {
-            if (!status || item.status === status) {
-                if (!platform || item.platform === platform) {
-                    uploads.push({ ...item, source: 'completed' });
-                }
-            }
+        // Add active uploads
+        this.activeUploads.forEach(item => {
+            uploads.push({
+                ...item,
+                source: 'active'
+            });
         });
 
-        // Urutkan berdasarkan createdAt
-        uploads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        // Add history
+        this.uploadHistory.forEach(item => {
+            uploads.push({
+                ...item,
+                source: 'history'
+            });
+        });
 
-        return uploads;
+        // Apply filters
+        if (filter.status) {
+            uploads = uploads.filter(u => u.status === filter.status);
+        }
+        if (filter.platform) {
+            uploads = uploads.filter(u => u.platform === filter.platform);
+        }
+
+        return uploads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     /**
-     * Mendapatkan statistik upload
+     * Get storage statistics
      */
-    getUploadStats() {
-        const stats = {
-            total: 0,
-            byPlatform: {},
-            byStatus: {},
-            totalSize: 0,
-            averageSpeed: 0
-        };
+    getStats() {
+        let totalSize = 0;
+        let fileCount = 0;
+        const statusStats = {};
+        const platformStats = {};
 
-        // Hitung dari queue
+        // Count queued files
         this.uploadQueue.forEach(item => {
-            stats.total++;
-            stats.byPlatform[item.platform] = (stats.byPlatform[item.platform] || 0) + 1;
-            stats.byStatus[item.status] = (stats.byStatus[item.status] || 0) + 1;
-            stats.totalSize += item.fileSize;
+            totalSize += item.fileSize;
+            fileCount++;
+            statusStats[item.status] = (statusStats[item.status] || 0) + 1;
+            platformStats[item.platform] = (platformStats[item.platform] || 0) + 1;
         });
 
-        // Hitung dari completed
-        this.completedUploads.forEach(item => {
-            stats.total++;
-            stats.byPlatform[item.platform] = (stats.byPlatform[item.platform] || 0) + 1;
-            stats.byStatus.completed = (stats.byStatus.completed || 0) + 1;
-            stats.totalSize += item.fileSize;
+        // Count active uploads
+        this.activeUploads.forEach(item => {
+            totalSize += item.fileSize;
+            fileCount++;
+            statusStats.uploading = (statusStats.uploading || 0) + 1;
+            platformStats[item.platform] = (platformStats[item.platform] || 0) + 1;
         });
 
-        return stats;
+        // Count files in directories
+        Object.entries(this.dirs).forEach(([name, dir]) => {
+            if (fs.existsSync(dir) && !['metadata'].includes(name)) {
+                const items = fs.readdirSync(dir);
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
+                    if (!stat.isDirectory()) {
+                        totalSize += stat.size;
+                        fileCount++;
+                    }
+                });
+            }
+        });
+
+        return {
+            totalSize: this.formatBytes(totalSize),
+            totalSizeBytes: totalSize,
+            fileCount,
+            statusStats,
+            platformStats,
+            queued: this.uploadQueue.length,
+            active: this.activeUploads.size,
+            completed: this.uploadHistory.length
+        };
+    }
+
+    /**
+     * Clean up old files
+     */
+    async cleanup(days = 7) {
+        const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+        let deletedCount = 0;
+        let freedSpace = 0;
+
+        const dirsToClean = ['pending', 'failed', 'temp'];
+
+        dirsToClean.forEach(dirName => {
+            const dir = this.dirs[dirName];
+            if (fs.existsSync(dir)) {
+                const items = fs.readdirSync(dir);
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
+                    
+                    if (!stat.isDirectory() && stat.mtimeMs < cutoff) {
+                        freedSpace += stat.size;
+                        fs.unlinkSync(fullPath);
+                        deletedCount++;
+                    }
+                });
+            }
+        });
+
+        return {
+            deletedCount,
+            freedSpace: this.formatBytes(freedSpace),
+            freedSpaceBytes: freedSpace
+        };
     }
 
     /**
      * Generate unique ID
      */
-    generateUploadId() {
-        return crypto
-            .createHash('md5')
-            .update(Date.now().toString() + Math.random())
-            .digest('hex')
-            .substring(0, 12);
+    generateId() {
+        return crypto.randomBytes(8).toString('hex');
     }
 
     /**
-     * Generate video ID (simulasi)
+     * Generate video ID (simulated)
      */
     generateVideoId(platform) {
         const prefixes = {
@@ -427,62 +448,21 @@ class UploadManager {
             instagram: 'IG',
             facebook: 'FB'
         };
-        
         const prefix = prefixes[platform] || 'VD';
-        const random = crypto.randomBytes(4).toString('hex');
-        
-        return `${prefix}_${random}_${Date.now().toString(36)}`;
+        return `${prefix}_${crypto.randomBytes(4).toString('hex')}`;
     }
 
     /**
-     * Generate video URL
+     * Generate video URL (simulated)
      */
     generateVideoUrl(platform, videoId) {
         const urls = {
             youtube: `https://youtu.be/${videoId}`,
             tiktok: `https://tiktok.com/@user/video/${videoId}`,
             instagram: `https://instagram.com/p/${videoId}`,
-            facebook: `https://facebook.com/watch/?v=${videoId}`
+            facebook: `https://facebook.com/watch?v=${videoId}`
         };
-        
         return urls[platform] || `https://example.com/video/${videoId}`;
-    }
-
-    /**
-     * Membersihkan file lama
-     */
-    cleanupOldFiles(days = 7) {
-        const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
-        let deletedCount = 0;
-        let freedSpace = 0;
-
-        const cleanupDir = (dir) => {
-            if (!fs.existsSync(dir)) return;
-            
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
-                
-                if (stat.isDirectory()) {
-                    cleanupDir(fullPath);
-                } else if (stat.mtimeMs < cutoff) {
-                    freedSpace += stat.size;
-                    fs.unlinkSync(fullPath);
-                    deletedCount++;
-                }
-            });
-        };
-
-        // Bersihkan folder pending dan failed saja
-        cleanupDir(this.dirs.pending);
-        cleanupDir(this.dirs.failed);
-
-        return {
-            deletedCount,
-            freedSpace: this.formatBytes(freedSpace),
-            freedSpaceBytes: freedSpace
-        };
     }
 
     /**
