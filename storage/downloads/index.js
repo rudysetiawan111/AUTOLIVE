@@ -1,184 +1,148 @@
 /**
  * Download Manager
- * Mengelola file yang di-download dari berbagai platform
+ * Manages all downloaded files from various platforms
  */
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
-const { promisify } = require('util');
-const stream = require('stream');
 const axios = require('axios');
+const Logger = require('../utils/logger');
+const EventEmitter = require('events');
 
-const pipeline = promisify(stream.pipeline);
-
-class DownloadManager {
+class DownloadManager extends EventEmitter {
     constructor() {
-        this.basePath = path.join(__dirname, '../downloads');
-        this.tempPath = path.join(__dirname, '../temp');
-        this.maxConcurrent = 5;
+        super();
+        this.basePath = path.join(__dirname);
         this.activeDownloads = new Map();
-        this.downloadQueue = [];
-        this.completedDownloads = [];
+        this.downloadHistory = [];
+        this.maxConcurrent = 5;
         
-        // Pastikan folder exists
-        this.ensureDirectories();
+        // Initialize directories
+        this.dirs = {
+            videos: path.join(this.basePath, 'videos'),
+            audios: path.join(this.basePath, 'audios'),
+            images: path.join(this.basePath, 'images'),
+            thumbnails: path.join(this.basePath, 'thumbnails'),
+            subtitles: path.join(this.basePath, 'subtitles'),
+            metadata: path.join(this.basePath, 'metadata')
+        };
     }
 
     /**
-     * Memastikan semua direktori yang diperlukan ada
+     * Download a file from URL
      */
-    ensureDirectories() {
-        const dirs = [
-            this.basePath,
-            this.tempPath,
-            path.join(this.basePath, 'videos'),
-            path.join(this.basePath, 'audios'),
-            path.join(this.basePath, 'images'),
-            path.join(this.basePath, 'thumbnails'),
-            path.join(this.basePath, 'subtitles'),
-            path.join(this.basePath, 'metadata')
-        ];
-
-        dirs.forEach(dir => {
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-                console.log(`[Storage] Created directory: ${dir}`);
-            }
-        });
-    }
-
-    /**
-     * Download file dari URL
-     */
-    async downloadFile(url, options = {}) {
+    async download(url, options = {}) {
         const {
             type = 'video',
-            filename = null,
             platform = 'youtube',
             quality = 'highest',
+            filename = null,
             metadata = {},
             onProgress = null
         } = options;
 
+        const downloadId = this.generateId();
+        const ext = this.getExtension(type);
+        const fileName = filename || this.generateFilename(url, type);
+        const subDir = this.getSubDir(type);
+        const tempPath = path.join(process.cwd(), 'temp', `download_${downloadId}${ext}`);
+        const finalPath = path.join(this.dirs[subDir], fileName);
+
         try {
-            // Generate ID untuk download
-            const downloadId = this.generateDownloadId(url);
-            
-            // Cek apakah sudah pernah di-download
-            const existingFile = this.findExistingFile(url, type);
-            if (existingFile) {
-                console.log(`[Storage] File already exists: ${existingFile}`);
-                return {
-                    success: true,
-                    downloadId,
-                    filePath: existingFile,
-                    fromCache: true
-                };
-            }
-
-            // Tentukan path penyimpanan
-            const ext = this.getFileExtension(url, type);
-            const finalFilename = filename || this.generateFilename(url, type, ext);
-            const subDir = this.getSubDirectory(type);
-            const tempPath = path.join(this.tempPath, `temp_${downloadId}${ext}`);
-            const finalPath = path.join(this.basePath, subDir, finalFilename);
-
-            // Simpan ke active downloads
-            const downloadPromise = this.performDownload(url, tempPath, finalPath, {
-                downloadId,
-                type,
-                platform,
-                quality,
-                metadata,
-                onProgress
-            });
-
             this.activeDownloads.set(downloadId, {
                 id: downloadId,
                 url,
                 status: 'downloading',
                 progress: 0,
-                promise: downloadPromise
-            });
-
-            // Tunggu download selesai
-            const result = await downloadPromise;
-
-            // Pindahkan ke completed
-            this.completedDownloads.push({
-                id: downloadId,
-                url,
-                filePath: finalPath,
-                timestamp: new Date().toISOString(),
                 type,
                 platform,
-                size: this.getFileSize(finalPath),
-                metadata
+                startTime: Date.now()
             });
 
+            Logger.info(`Starting download: ${url}`, { downloadId, type });
+
+            // Simulate download (replace with actual download logic)
+            const result = await this.performDownload(url, tempPath, {
+                downloadId,
+                quality,
+                onProgress
+            });
+
+            // Move to final destination
+            await fs.move(tempPath, finalPath, { overwrite: true });
+
+            const downloadInfo = {
+                id: downloadId,
+                url,
+                path: finalPath,
+                filename: fileName,
+                type,
+                platform,
+                size: result.size,
+                metadata: {
+                    ...metadata,
+                    downloadedAt: new Date().toISOString(),
+                    quality
+                }
+            };
+
+            this.downloadHistory.push(downloadInfo);
             this.activeDownloads.delete(downloadId);
+
+            this.emit('completed', downloadInfo);
+            Logger.info(`Download completed: ${fileName}`, { downloadId });
 
             return {
                 success: true,
-                downloadId,
-                filePath: finalPath,
-                size: result.size,
-                duration: result.duration,
-                metadata: result.metadata,
-                fromCache: false
+                ...downloadInfo
             };
 
         } catch (error) {
-            console.error(`[Storage] Download failed: ${error.message}`);
+            this.activeDownloads.delete(downloadId);
+            await fs.remove(tempPath).catch(() => {});
+            
+            Logger.error(`Download failed: ${error.message}`, { downloadId });
+            
+            this.emit('error', { downloadId, error: error.message });
+            
             return {
                 success: false,
-                error: error.message
+                error: error.message,
+                downloadId
             };
         }
     }
 
     /**
-     * Melakukan proses download
+     * Perform actual download
      */
-    async performDownload(url, tempPath, finalPath, options) {
-        const {
-            downloadId,
-            type,
-            platform,
-            quality,
-            metadata,
-            onProgress
-        } = options;
+    async performDownload(url, outputPath, options) {
+        const { downloadId, quality, onProgress } = options;
 
-        // Simulasi download (implementasi sesuai platform)
-        console.log(`[Storage] Downloading ${url} to ${tempPath}`);
-
-        // Untuk simulasi, kita buat file dummy
+        // Simulate download progress
         return new Promise((resolve, reject) => {
             let progress = 0;
             const interval = setInterval(() => {
-                progress += 10;
-                if (onProgress) onProgress(progress);
+                progress += Math.random() * 10;
                 
+                if (onProgress) {
+                    onProgress(Math.min(progress, 100));
+                }
+
+                this.activeDownloads.set(downloadId, {
+                    ...this.activeDownloads.get(downloadId),
+                    progress: Math.min(progress, 100)
+                });
+
                 if (progress >= 100) {
                     clearInterval(interval);
                     
-                    // Buat file dummy
-                    fs.writeFileSync(tempPath, `Dummy content for ${url}`);
-                    
-                    // Pindahkan ke final path
-                    fs.renameSync(tempPath, finalPath);
+                    // Create dummy file
+                    fs.writeFileSync(outputPath, `Dummy content for ${url}`);
                     
                     resolve({
-                        size: fs.statSync(finalPath).size,
-                        duration: Math.floor(Math.random() * 300) + 60, // 1-5 menit
-                        metadata: {
-                            ...metadata,
-                            downloadedAt: new Date().toISOString(),
-                            quality,
-                            platform
-                        }
+                        size: fs.statSync(outputPath).size
                     });
                 }
             }, 500);
@@ -186,23 +150,16 @@ class DownloadManager {
     }
 
     /**
-     * Download batch (multiple files)
+     * Download multiple files
      */
     async downloadBatch(urls, options = {}) {
         const results = [];
-        const batchSize = options.concurrent || this.maxConcurrent;
+        const chunks = this.chunkArray(urls, this.maxConcurrent);
 
-        for (let i = 0; i < urls.length; i += batchSize) {
-            const batch = urls.slice(i, i + batchSize);
-            const promises = batch.map(url => this.downloadFile(url, options));
-            const batchResults = await Promise.allSettled(promises);
-            
-            batchResults.forEach((result, index) => {
-                results.push({
-                    url: batch[index],
-                    ...result
-                });
-            });
+        for (const chunk of chunks) {
+            const promises = chunk.map(url => this.download(url, options));
+            const chunkResults = await Promise.allSettled(promises);
+            results.push(...chunkResults);
         }
 
         return {
@@ -214,30 +171,26 @@ class DownloadManager {
     }
 
     /**
-     * Mendapatkan status download
+     * Get download status
      */
-    getDownloadStatus(downloadId) {
+    getStatus(downloadId) {
         if (this.activeDownloads.has(downloadId)) {
             return this.activeDownloads.get(downloadId);
         }
 
-        const completed = this.completedDownloads.find(d => d.id === downloadId);
-        if (completed) {
-            return {
-                ...completed,
-                status: 'completed'
-            };
+        const history = this.downloadHistory.find(d => d.id === downloadId);
+        if (history) {
+            return { ...history, status: 'completed' };
         }
 
         return null;
     }
 
     /**
-     * Membatalkan download
+     * Cancel active download
      */
-    cancelDownload(downloadId) {
+    cancel(downloadId) {
         if (this.activeDownloads.has(downloadId)) {
-            // Implement cancel logic
             this.activeDownloads.delete(downloadId);
             return { success: true };
         }
@@ -245,114 +198,103 @@ class DownloadManager {
     }
 
     /**
-     * Mendapatkan daftar file yang sudah di-download
+     * List all downloads
      */
-    listDownloads(type = null, platform = null) {
+    list(filter = {}) {
         let files = [];
 
-        const scanDir = (dir) => {
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
-                
-                if (stat.isDirectory()) {
-                    scanDir(fullPath);
-                } else {
-                    const fileInfo = {
-                        name: item,
-                        path: fullPath,
-                        size: stat.size,
-                        modified: stat.mtime,
-                        created: stat.birthtime,
-                        type: this.getFileTypeFromPath(fullPath)
-                    };
-
-                    // Filter berdasarkan type
-                    if (!type || fileInfo.type === type) {
-                        files.push(fileInfo);
+        Object.entries(this.dirs).forEach(([type, dir]) => {
+            if (fs.existsSync(dir)) {
+                const items = fs.readdirSync(dir);
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
+                    
+                    if (!stat.isDirectory()) {
+                        files.push({
+                            name: item,
+                            path: fullPath,
+                            size: stat.size,
+                            type,
+                            modified: stat.mtime,
+                            created: stat.birthtime
+                        });
                     }
-                }
-            });
-        };
+                });
+            }
+        });
 
-        scanDir(this.basePath);
+        // Apply filters
+        if (filter.type) {
+            files = files.filter(f => f.type === filter.type);
+        }
+        if (filter.platform) {
+            files = files.filter(f => f.metadata?.platform === filter.platform);
+        }
+        if (filter.days) {
+            const cutoff = Date.now() - (filter.days * 24 * 60 * 60 * 1000);
+            files = files.filter(f => f.created.getTime() > cutoff);
+        }
 
-        // Urutkan berdasarkan modified terbaru
-        files.sort((a, b) => b.modified - a.modified);
-
-        return files;
+        return files.sort((a, b) => b.created - a.created);
     }
 
     /**
-     * Mendapatkan statistik storage
+     * Get storage statistics
      */
-    getStorageStats() {
+    getStats() {
         let totalSize = 0;
         let fileCount = 0;
-        let typeStats = {};
+        const typeStats = {};
 
-        const calculateSize = (dir) => {
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
+        Object.entries(this.dirs).forEach(([type, dir]) => {
+            if (fs.existsSync(dir)) {
+                const items = fs.readdirSync(dir);
+                typeStats[type] = items.length;
                 
-                if (stat.isDirectory()) {
-                    calculateSize(fullPath);
-                } else {
-                    totalSize += stat.size;
-                    fileCount++;
-                    
-                    const type = this.getFileTypeFromPath(fullPath);
-                    typeStats[type] = (typeStats[type] || 0) + 1;
-                }
-            });
-        };
-
-        calculateSize(this.basePath);
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
+                    if (!stat.isDirectory()) {
+                        totalSize += stat.size;
+                        fileCount++;
+                    }
+                });
+            }
+        });
 
         return {
             totalSize: this.formatBytes(totalSize),
             totalSizeBytes: totalSize,
             fileCount,
             typeStats,
-            freeSpace: this.getFreeSpace(),
-            downloadsPath: this.basePath,
-            tempPath: this.tempPath
+            activeDownloads: this.activeDownloads.size
         };
     }
 
     /**
-     * Membersihkan file lama
+     * Clean up old files
      */
-    cleanupOldFiles(days = 30) {
+    async cleanup(days = 30) {
         const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
         let deletedCount = 0;
         let freedSpace = 0;
 
-        const cleanupDir = (dir) => {
-            const items = fs.readdirSync(dir);
-            items.forEach(item => {
-                const fullPath = path.join(dir, item);
-                const stat = fs.statSync(fullPath);
-                
-                if (stat.isDirectory()) {
-                    cleanupDir(fullPath);
+        Object.values(this.dirs).forEach(dir => {
+            if (fs.existsSync(dir)) {
+                const items = fs.readdirSync(dir);
+                items.forEach(item => {
+                    const fullPath = path.join(dir, item);
+                    const stat = fs.statSync(fullPath);
                     
-                    // Hapus folder jika kosong
-                    if (fs.readdirSync(fullPath).length === 0) {
-                        fs.rmdirSync(fullPath);
+                    if (!stat.isDirectory() && stat.mtimeMs < cutoff) {
+                        freedSpace += stat.size;
+                        fs.unlinkSync(fullPath);
+                        deletedCount++;
                     }
-                } else if (stat.mtimeMs < cutoff) {
-                    freedSpace += stat.size;
-                    fs.unlinkSync(fullPath);
-                    deletedCount++;
-                }
-            });
-        };
-
-        cleanupDir(this.basePath);
+                });
+            }
+        });
 
         return {
             deletedCount,
@@ -362,43 +304,27 @@ class DownloadManager {
     }
 
     /**
-     * Mencari file yang sudah ada
+     * Generate unique ID
      */
-    findExistingFile(url, type) {
-        // Implementasi pencarian berdasarkan metadata
-        return null;
-    }
-
-    /**
-     * Generate unique ID untuk download
-     */
-    generateDownloadId(url) {
-        return crypto
-            .createHash('md5')
-            .update(url + Date.now())
-            .digest('hex')
-            .substring(0, 12);
+    generateId() {
+        return crypto.randomBytes(8).toString('hex');
     }
 
     /**
      * Generate filename
      */
-    generateFilename(url, type, ext) {
+    generateFilename(url, type) {
+        const hash = crypto.createHash('md5').update(url).digest('hex').substring(0, 8);
         const timestamp = Date.now();
-        const hash = crypto
-            .createHash('md5')
-            .update(url)
-            .digest('hex')
-            .substring(0, 8);
-        
+        const ext = this.getExtension(type);
         return `${type}_${timestamp}_${hash}${ext}`;
     }
 
     /**
-     * Mendapatkan ekstensi file dari URL
+     * Get file extension by type
      */
-    getFileExtension(url, type) {
-        const extMap = {
+    getExtension(type) {
+        const extensions = {
             video: '.mp4',
             audio: '.mp3',
             image: '.jpg',
@@ -406,13 +332,13 @@ class DownloadManager {
             subtitle: '.vtt',
             metadata: '.json'
         };
-        return extMap[type] || '.bin';
+        return extensions[type] || '.bin';
     }
 
     /**
-     * Mendapatkan subdirectory berdasarkan tipe
+     * Get subdirectory name by type
      */
-    getSubDirectory(type) {
+    getSubDir(type) {
         const dirMap = {
             video: 'videos',
             audio: 'audios',
@@ -425,23 +351,7 @@ class DownloadManager {
     }
 
     /**
-     * Mendapatkan tipe file dari path
-     */
-    getFileTypeFromPath(filePath) {
-        const dir = path.dirname(filePath).split(path.sep).pop();
-        const typeMap = {
-            'videos': 'video',
-            'audios': 'audio',
-            'images': 'image',
-            'thumbnails': 'thumbnail',
-            'subtitles': 'subtitle',
-            'metadata': 'metadata'
-        };
-        return typeMap[dir] || 'unknown';
-    }
-
-    /**
-     * Format bytes ke human readable
+     * Format bytes
      */
     formatBytes(bytes) {
         if (bytes === 0) return '0 Bytes';
@@ -452,23 +362,14 @@ class DownloadManager {
     }
 
     /**
-     * Mendapatkan free space (simulasi)
+     * Chunk array for batch processing
      */
-    getFreeSpace() {
-        // Implementasi untuk mendapatkan free space disk
-        return this.formatBytes(50 * 1024 * 1024 * 1024); // 50GB dummy
-    }
-
-    /**
-     * Mendapatkan ukuran file
-     */
-    getFileSize(filePath) {
-        try {
-            const stat = fs.statSync(filePath);
-            return stat.size;
-        } catch {
-            return 0;
+    chunkArray(array, size) {
+        const chunks = [];
+        for (let i = 0; i < array.length; i += size) {
+            chunks.push(array.slice(i, i + size));
         }
+        return chunks;
     }
 }
 
