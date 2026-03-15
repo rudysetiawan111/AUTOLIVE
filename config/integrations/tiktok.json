@@ -1,4 +1,239 @@
 {
-  "client_key": "awf22yr9a734f9s2",
-  "client_secret": "3aRpHBlJGejnFeb20V8hNVFPFbdhO9uT"
+  "name": "TikTok Integration",
+  "version": "1.5.0",
+  "enabled": true,
+  "api": {
+    "baseUrl": "https://open-api.tiktok.com",
+    "authUrl": "https://www.tiktok.com/auth/authorize",
+    "tokenUrl": "https://open-api.tiktok.com/oauth/access_token",
+    "refreshUrl": "https://open-api.tiktok.com/oauth/refresh_token",
+    "scopes": [
+      "user.info.basic",
+      "video.list",
+      "video.upload",
+      "video.publish",
+      "video.data",
+      "video.delete",
+      "comment.list",
+      "comment.publish",
+      "like.list",
+      "follower.list"
+    ],
+    "apiVersion": "v2",
+    "quota": {
+      "dailyLimit": 10000,
+      "perUserLimit": 1000
+    }
+  },
+  "oauth": {
+    "clientKey": "YOUR_TIKTOK_CLIENT_KEY",
+    "clientSecret": "YOUR_TIKTOK_CLIENT_SECRET",
+    "redirectUri": "https://autolive.com/auth/tiktok/callback",
+    "responseType": "code",
+    "grantType": "authorization_code"
+  },
+  "upload": {
+    "maxFileSize": 300000000,
+    "maxDuration": 600,
+    "minDuration": 5,
+    "allowedFormats": [
+      "mp4",
+      "mov",
+      "avi",
+      "3gp",
+      "mpeg4"
+    ],
+    "allowedResolutions": [
+      "1080x1920",
+      "720x1280",
+      "540x960"
+    ],
+    "defaultPrivacy": "public",
+    "allowDuet": true,
+    "allowStitch": true,
+    "allowComment": true,
+    "hashtags": {
+      "maxCount": 10,
+      "maxLength": 35
+    },
+    "mentions": {
+      "maxCount": 5
+    }
+  },
+  "download": {
+    "maxConcurrent": 3,
+    "timeout": 180000,
+    "retryCount": 3,
+    "retryDelay": 5000,
+    "tempDir": "storage/temp/tiktok",
+    "outputDir": "storage/downloads/tiktok",
+    "availableQualities": [
+      "highest",
+      "720p",
+      "540p",
+      "480p",
+      "lowest"
+    ],
+    "watermark": {
+      "removeWatermark": true,
+      "method": "ai",
+      "quality": "high"
+    },
+    "audio": {
+      "extract": true,
+      "format": "mp3",
+      "quality": "192k"
+    },
+    "metadata": {
+      "enabled": true,
+      "saveJson": true,
+      "fields": [
+        "video_id",
+        "title",
+        "description",
+        "create_time",
+        "view_count",
+        "like_count",
+        "comment_count",
+        "share_count",
+        "download_count",
+        "music",
+        "hashtags",
+        "mentions",
+        "duration"
+      ]
+    }
+  },
+  "analytics": {
+    "enabled": true,
+    "metrics": [
+      "video_views",
+      "total_views",
+      "profile_views",
+      "likes",
+      "comments",
+      "shares",
+      "downloads",
+      "followers_count",
+      "following_count",
+      "video_count",
+      "avg_watch_time",
+      "completion_rate"
+    ],
+    "timeRanges": [
+      "day",
+      "week",
+      "month",
+      "year"
+    ]
+  },
+  "content": {
+    "categories": [
+      "Comedy",
+      "Dance",
+      "Pranks",
+      "Sports",
+      "DIY",
+      "Travel",
+      "Fitness",
+      "Beauty",
+      "Fashion",
+      "Food",
+      "Animals",
+      "Gaming",
+      "Education",
+      "Music",
+      "Vlogs",
+      "Relationships",
+      "Family",
+      "Tech",
+      "Business",
+      "Motivation"
+    ],
+    "music": {
+      "trending": true,
+      "original": true,
+      "genres": [
+        "pop",
+        "hiphop",
+        "electronic",
+        "rnb",
+        "rock",
+        "country",
+        "jazz",
+        "classical",
+        "edm",
+        "phonk"
+      ]
+    },
+    "effects": {
+      "trending": true,
+      "greenscreen": true,
+      "beauty": true,
+      "facezoom": true,
+      "timewarp": true
+    }
+  },
+  "trending": {
+    "enabled": true,
+    "updateInterval": 3600,
+    "maxHashtags": 50,
+    "maxSongs": 50,
+    "maxEffects": 50,
+    "regions": [
+      "ID",
+      "US",
+      "GB",
+      "JP",
+      "KR",
+      "TH",
+      "VN",
+      "MY",
+      "SG",
+      "PH"
+    ]
+  },
+  "scheduling": {
+    "bestTimes": {
+      "monday": ["06:00", "10:00", "19:00"],
+      "tuesday": ["06:00", "10:00", "19:00"],
+      "wednesday": ["06:00", "10:00", "19:00"],
+      "thursday": ["06:00", "10:00", "19:00"],
+      "friday": ["06:00", "10:00", "16:00"],
+      "saturday": ["09:00", "12:00", "20:00"],
+      "sunday": ["09:00", "12:00", "20:00"]
+    },
+    "maxScheduled": 50
+  },
+  "limits": {
+    "maxTitleLength": 150,
+    "maxDescriptionLength": 2200,
+    "maxHashtagsPerVideo": 10,
+    "maxMentionsPerVideo": 5,
+    "maxVideosPerDay": 10,
+    "maxVideosPerHour": 2
+  },
+  "webhook": {
+    "enabled": false,
+    "url": "",
+    "events": [
+      "video.uploaded",
+      "video.published",
+      "video.deleted",
+      "comment.added",
+      "comment.replied",
+      "like.added"
+    ],
+    "secret": ""
+  },
+  "cache": {
+    "enabled": true,
+    "ttl": 1800,
+    "maxSize": 50
+  },
+  "rateLimit": {
+    "enabled": true,
+    "maxRequests": 50,
+    "timeWindow": 60
+  }
 }
