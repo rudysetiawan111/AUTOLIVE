@@ -1,0 +1,773 @@
+<!-- ========================================
+     SIDEBAR COMPONENT - AutoLive
+     Include this file in all pages
+     ======================================== -->
+
+<aside class="sidebar" id="sidebar">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+        <a href="/dashboard/home.html" class="sidebar-logo">
+            <!-- Expanded Logo -->
+            <img src="/assets/images/logo-white.svg" 
+                 alt="AutoLive" 
+                 class="logo-expanded" 
+                 width="120" 
+                 height="30">
+            
+            <!-- Collapsed Logo -->
+            <img src="/assets/images/logo-small.png" 
+                 alt="AL" 
+                 class="logo-collapsed" 
+                 width="32" 
+                 height="32">
+        </a>
+    </div>
+
+    <!-- Sidebar User Info (Mobile) -->
+    <div class="sidebar-user-mobile">
+        <div class="user-avatar">
+            <span id="mobileUserInitials">JD</span>
+        </div>
+        <div class="user-info">
+            <span class="user-name" id="mobileUserName">John Doe</span>
+            <span class="user-email" id="mobileUserEmail">john@example.com</span>
+        </div>
+    </div>
+
+    <!-- Sidebar Search (Mobile) -->
+    <div class="sidebar-search-mobile">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search..." id="mobileSidebarSearch">
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="sidebar-nav">
+        <ul class="sidebar-menu">
+            <!-- Dashboard -->
+            <li class="sidebar-item">
+                <a href="/dashboard/home.html" class="sidebar-link" data-tooltip="Dashboard">
+                    <i class="fas fa-home"></i>
+                    <span class="link-text">Dashboard</span>
+                    <span class="badge new">3</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="/dashboard/analytics.html" class="sidebar-link" data-tooltip="Analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="link-text">Analytics</span>
+                </a>
+            </li>
+
+            <!-- Divider -->
+            <li class="sidebar-divider">
+                <span>DISCOVERY</span>
+            </li>
+
+            <!-- Viral Discovery -->
+            <li class="sidebar-item">
+                <a href="/viral-discovery/index.html" class="sidebar-link" data-tooltip="Viral Discovery">
+                    <i class="fas fa-fire"></i>
+                    <span class="link-text">Viral Discovery</span>
+                    <span class="badge hot">HOT</span>
+                </a>
+            </li>
+
+            <!-- Channel Manager -->
+            <li class="sidebar-item has-submenu" id="channelMenu">
+                <a href="#" class="sidebar-link" onclick="toggleSubmenu('channelMenu')">
+                    <i class="fas fa-users"></i>
+                    <span class="link-text">Channel Manager</span>
+                    <i class="fas fa-chevron-right submenu-icon"></i>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li>
+                        <a href="/channel-manager/index.html">
+                            <i class="fas fa-list"></i>
+                            <span>Semua Channel</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/channel-manager/index.html#youtube">
+                            <i class="fab fa-youtube"></i>
+                            <span>YouTube</span>
+                            <span class="badge">3</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/channel-manager/index.html#tiktok">
+                            <i class="fab fa-tiktok"></i>
+                            <span>TikTok</span>
+                            <span class="badge">2</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/channel-manager/index.html#add">
+                            <i class="fas fa-plus"></i>
+                            <span>Tambah Channel</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Divider -->
+            <li class="sidebar-divider">
+                <span>AUTOMATION</span>
+            </li>
+
+            <!-- Scheduler -->
+            <li class="sidebar-item">
+                <a href="/automation/scheduler.html" class="sidebar-link" data-tooltip="Scheduler">
+                    <i class="fas fa-clock"></i>
+                    <span class="link-text">Scheduler</span>
+                </a>
+            </li>
+
+            <!-- Queue -->
+            <li class="sidebar-item">
+                <a href="/automation/queue.html" class="sidebar-link" data-tooltip="Queue">
+                    <i class="fas fa-tasks"></i>
+                    <span class="link-text">Queue</span>
+                    <span class="badge warning">5</span>
+                </a>
+            </li>
+
+            <!-- Workflow Builder -->
+            <li class="sidebar-item has-submenu" id="workflowMenu">
+                <a href="#" class="sidebar-link" onclick="toggleSubmenu('workflowMenu')">
+                    <i class="fas fa-project-diagram"></i>
+                    <span class="link-text">Workflow Builder</span>
+                    <i class="fas fa-chevron-right submenu-icon"></i>
+                </a>
+                <ul class="sidebar-submenu">
+                    <li>
+                        <a href="/workflow-builder/index.html">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Buat Workflow</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/workflow-builder/index.html#templates">
+                            <i class="fas fa-copy"></i>
+                            <span>Template</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/workflow-builder/index.html#active">
+                            <i class="fas fa-play"></i>
+                            <span>Active Workflows</span>
+                            <span class="badge success">4</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Automation App Builder -->
+            <li class="sidebar-item">
+                <a href="/automation-app-builder/index.html" class="sidebar-link" data-tooltip="App Builder">
+                    <i class="fas fa-robot"></i>
+                    <span class="link-text">App Builder</span>
+                </a>
+            </li>
+
+            <!-- Divider -->
+            <li class="sidebar-divider">
+                <span>REPORTS</span>
+            </li>
+
+            <!-- Upload Reports -->
+            <li class="sidebar-item">
+                <a href="/reports/uploads.html" class="sidebar-link" data-tooltip="Upload Reports">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="link-text">Upload Reports</span>
+                </a>
+            </li>
+
+            <!-- Analytics Reports -->
+            <li class="sidebar-item">
+                <a href="/reports/analytics.html" class="sidebar-link" data-tooltip="Analytics Reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="link-text">Analytics Reports</span>
+                </a>
+            </li>
+
+            <!-- Divider -->
+            <li class="sidebar-divider">
+                <span>SETTINGS</span>
+            </li>
+
+            <!-- Account Settings -->
+            <li class="sidebar-item">
+                <a href="/settings/account.html" class="sidebar-link" data-tooltip="Account Settings">
+                    <i class="fas fa-user-cog"></i>
+                    <span class="link-text">Account</span>
+                </a>
+            </li>
+
+            <!-- Admin Settings -->
+            <li class="sidebar-item" id="adminMenuItem">
+                <a href="/settings/admin.html" class="sidebar-link" data-tooltip="Admin Settings">
+                    <i class="fas fa-shield-alt"></i>
+                    <span class="link-text">Admin</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+        <!-- Storage Info -->
+        <div class="storage-info">
+            <div class="storage-header">
+                <i class="fas fa-database"></i>
+                <span>Storage</span>
+                <span class="storage-used">45.2 GB / 100 GB</span>
+            </div>
+            <div class="storage-progress">
+                <div class="progress-bar" style="width: 45%"></div>
+            </div>
+        </div>
+
+        <!-- Help & Support -->
+        <div class="sidebar-item">
+            <a href="#" class="sidebar-link" onclick="openSupport()">
+                <i class="fas fa-question-circle"></i>
+                <span class="link-text">Help & Support</span>
+            </a>
+        </div>
+
+        <!-- Dark Mode Toggle (Mobile) -->
+        <div class="sidebar-item mobile-only">
+            <a href="#" class="sidebar-link" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <span class="link-text">Dark Mode</span>
+            </a>
+        </div>
+
+        <!-- Logout (Mobile) -->
+        <div class="sidebar-item mobile-only">
+            <a href="#" class="sidebar-link text-danger" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="link-text">Logout</span>
+            </a>
+        </div>
+
+        <!-- Version Info -->
+        <div class="version-info">
+            <span>v1.0.0</span>
+            <span class="build">build 2026.03.15</span>
+        </div>
+    </div>
+</aside>
+
+<!-- CSS Tambahan untuk Sidebar -->
+<style>
+/* Sidebar Variables */
+:root {
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+    --sidebar-bg: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    --sidebar-hover: rgba(255, 255, 255, 0.1);
+    --sidebar-active: #667eea;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    color: white;
+    z-index: 1100;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.sidebar.collapsed .link-text,
+.sidebar.collapsed .sidebar-divider span,
+.sidebar.collapsed .storage-info span,
+.sidebar.collapsed .version-info span,
+.sidebar.collapsed .submenu-icon {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-user-mobile,
+.sidebar.collapsed .sidebar-search-mobile {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-item .badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.sidebar-logo {
+    display: inline-block;
+}
+
+.logo-expanded {
+    display: block;
+    max-width: 120px;
+    height: auto;
+    transition: all 0.3s ease;
+}
+
+.logo-collapsed {
+    display: none;
+    max-width: 32px;
+    height: auto;
+}
+
+.sidebar.collapsed .logo-expanded {
+    display: none;
+}
+
+.sidebar.collapsed .logo-collapsed {
+    display: block;
+    margin: 0 auto;
+}
+
+/* Sidebar User (Mobile) */
+.sidebar-user-mobile {
+    display: none;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-user-mobile .user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.sidebar-user-mobile .user-info {
+    flex: 1;
+}
+
+.sidebar-user-mobile .user-name {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.sidebar-user-mobile .user-email {
+    display: block;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Sidebar Search (Mobile) */
+.sidebar-search-mobile {
+    display: none;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.sidebar-search-mobile i {
+    position: absolute;
+    left: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-search-mobile input {
+    width: 100%;
+    padding: 10px 10px 10px 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+}
+
+.sidebar-search-mobile input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-search-mobile input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+    flex: 1;
+    padding: 20px 0;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-item {
+    position: relative;
+    margin: 5px 0;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    white-space: nowrap;
+    position: relative;
+}
+
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar-link.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-left-color: var(--sidebar-active);
+}
+
+.sidebar-link i {
+    width: 24px;
+    font-size: 18px;
+    text-align: center;
+}
+
+.sidebar-link .link-text {
+    margin-left: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.sidebar-link .badge {
+    margin-left: auto;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge.new {
+    background: #f56565;
+    color: white;
+}
+
+.badge.hot {
+    background: #ed8936;
+    color: white;
+}
+
+.badge.warning {
+    background: #ecc94b;
+    color: #744210;
+}
+
+.badge.success {
+    background: #48bb78;
+    color: white;
+}
+
+.submenu-icon {
+    margin-left: auto;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-item.open .submenu-icon {
+    transform: rotate(90deg);
+}
+
+/* Submenu */
+.sidebar-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-item.open .sidebar-submenu {
+    max-height: 300px;
+}
+
+.sidebar-submenu li a {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px 10px 54px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.sidebar-submenu li a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar-submenu li a i {
+    width: 20px;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.sidebar-submenu .badge {
+    margin-left: auto;
+    font-size: 10px;
+}
+
+/* Divider */
+.sidebar-divider {
+    padding: 15px 20px 5px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storage-info {
+    margin-bottom: 15px;
+}
+
+.storage-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+    white-space: nowrap;
+}
+
+.storage-header i {
+    font-size: 14px;
+}
+
+.storage-used {
+    margin-left: auto;
+    font-size: 11px;
+}
+
+.storage-progress {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.storage-progress .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.version-info {
+    margin-top: 15px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.version-info .build {
+    display: block;
+    font-size: 9px;
+}
+
+/* Mobile Only Elements */
+.mobile-only {
+    display: none;
+}
+
+/* Tooltips for collapsed mode */
+.sidebar.collapsed [data-tooltip] {
+    position: relative;
+}
+
+.sidebar.collapsed [data-tooltip]:hover:before {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #2d3748;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1200;
+    margin-left: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Dark Mode Adjustments */
+.dark-theme .sidebar {
+    --sidebar-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: none;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.collapsed.active {
+        transform: translateX(0);
+        width: var(--sidebar-width);
+    }
+    
+    .sidebar.collapsed.active .link-text,
+    .sidebar.collapsed.active .sidebar-divider span,
+    .sidebar.collapsed.active .storage-info span {
+        display: block;
+    }
+    
+    .sidebar-user-mobile,
+    .sidebar-search-mobile,
+    .mobile-only {
+        display: flex;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+}
+
+@media (max-width: 576px) {
+    .sidebar {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+</style>
+
+<!-- JavaScript untuk Sidebar -->
+<script>
+// Toggle submenu
+function toggleSubmenu(menuId) {
+    const menuItem = document.getElementById(menuId);
+    if (menuItem) {
+        menuItem.classList.toggle('open');
+    }
+}
+
+// Close all submenus
+function closeAllSubmenus() {
+    document.querySelectorAll('.sidebar-item.has-submenu').forEach(item => {
+        item.classList.remove('open');
+    });
+}
+
+// Set active menu based on current URL
+function setActiveMenu() {
+    const currentPath = window.location.pathname;
+    
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.remove('active');
+        
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+            
+            // Open parent submenu if exists
+            const parentSubmenu = link.closest('.sidebar-submenu');
+            if (parentSubmenu) {
+                const parentItem = parentSubmenu.closest('.sidebar-item');
+                if (parentItem) {
+                    parentItem.classList.add('open');
+                }
+            }
+        }
+    });
+}
+
+// Initialize sidebar
+document.addEventListener('DOMContentLoaded', () => {
+    setActiveMenu();
+    
+    // Check user role to show/hide admin menu
+    const userRole = localStorage.getItem('userRole');
+    const adminMenuItem = document.getElementById('adminMenuItem');
+    if (adminMenuItem) {
+        if (userRole === 'admin') {
+            adminMenuItem.style.display = 'block';
+        } else {
+            adminMenuItem.style.display = 'none';
+        }
+    }
+    
+    // Update user info
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.name) {
+        const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('mobileUserInitials').textContent = initials || 'U';
+        document.getElementById('mobileUserName').textContent = user.name;
+        document.getElementById('mobileUserEmail').textContent = user.email || '';
+    }
+});
+</script>
