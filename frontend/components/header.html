@@ -1,4 +1,983 @@
+<!-- ========================================
+     HEADER COMPONENT - AutoLive
+     Include this file in all pages
+     ======================================== -->
+
+<header class="main-header">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <!-- Sidebar Toggle Button -->
+            <button class="navbar-toggle sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <!-- Logo -->
+            <a href="/dashboard/home.html" class="navbar-brand">
+                <picture>
+                    <!-- Dark mode logo -->
+                    <source srcset="/assets/images/logo-white.svg" media="(prefers-color-scheme: dark)" id="logoDarkSource">
+                    <!-- Light mode logo -->
+                    <img src="/assets/images/logo.svg" 
+                         alt="AutoLive" 
+                         class="logo" 
+                         width="120" 
+                         height="30"
+                         id="mainLogo"
+                         loading="eager">
+                </picture>
+            </a>
+            
+            <!-- Search Bar (Desktop) -->
+            <div class="navbar-search" id="globalSearch">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" 
+                       class="search-input" 
+                       placeholder="Cari video, channel, atau laporan..." 
+                       id="searchInput"
+                       autocomplete="off">
+                <div class="search-results" id="searchResults" style="display: none;">
+                    <!-- Search results will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <!-- Create New Button -->
+            <div class="navbar-item dropdown" id="createDropdown">
+                <button class="btn-create" onclick="toggleDropdown('createDropdown')">
+                    <i class="fas fa-plus"></i>
+                    <span class="create-text">Buat Baru</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="/viral-discovery/index.html" class="dropdown-item">
+                        <i class="fas fa-fire"></i>
+                        <div class="dropdown-item-content">
+                            <span class="item-title">Viral Discovery</span>
+                            <span class="item-desc">Temukan konten viral</span>
+                        </div>
+                    </a>
+                    <a href="/workflow-builder/index.html" class="dropdown-item">
+                        <i class="fas fa-project-diagram"></i>
+                        <div class="dropdown-item-content">
+                            <span class="item-title">Workflow Baru</span>
+                            <span class="item-desc">Buat workflow automation</span>
+                        </div>
+                    </a>
+                    <a href="/channel-manager/index.html" class="dropdown-item">
+                        <i class="fas fa-plus-circle"></i>
+                        <div class="dropdown-item-content">
+                            <span class="item-title">Tambah Channel</span>
+                            <span class="item-desc">Hubungkan channel baru</span>
+                        </div>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/reports/uploads.html" class="dropdown-item">
+                        <i class="fas fa-file-alt"></i>
+                        <div class="dropdown-item-content">
+                            <span class="item-title">Buat Laporan</span>
+                            <span class="item-desc">Generate laporan baru</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="navbar-item">
+                <button class="navbar-icon" onclick="openQuickActions()" aria-label="Quick Actions">
+                    <i class="fas fa-bolt"></i>
+                </button>
+            </div>
+
+            <!-- Notifications -->
+            <div class="navbar-item dropdown" id="notificationDropdown">
+                <button class="navbar-icon" onclick="toggleDropdown('notificationDropdown')" aria-label="Notifications">
+                    <i class="far fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge">3</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <div class="dropdown-header">
+                        <h4>Notifikasi</h4>
+                        <button class="btn-link" onclick="markAllNotificationsRead()">Tandai semua dibaca</button>
+                    </div>
+                    <div class="notification-list" id="notificationList">
+                        <!-- Notifications will be loaded here -->
+                    </div>
+                    <div class="dropdown-footer">
+                        <a href="/notifications.html" class="view-all">Lihat semua notifikasi</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="navbar-item dropdown" id="messageDropdown">
+                <button class="navbar-icon" onclick="toggleDropdown('messageDropdown')" aria-label="Messages">
+                    <i class="far fa-envelope"></i>
+                    <span class="notification-badge">5</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <div class="dropdown-header">
+                        <h4>Pesan</h4>
+                        <button class="btn-link">Pesan baru</button>
+                    </div>
+                    <div class="message-list" id="messageList">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    <div class="dropdown-footer">
+                        <a href="/messages.html" class="view-all">Lihat semua pesan</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Menu -->
+            <div class="navbar-item dropdown" id="userDropdown">
+                <button class="navbar-user" onclick="toggleDropdown('userDropdown')" aria-label="User menu">
+                    <div class="navbar-avatar" id="userAvatar">
+                        <span id="userInitials">JD</span>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">John Doe</span>
+                        <span class="user-role" id="userRole">Admin</span>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <div class="user-profile-header">
+                        <div class="user-avatar-large">
+                            <img src="/assets/images/avatar-default.svg" alt="Profile" id="userProfileImage">
+                        </div>
+                        <div class="user-details">
+                            <h4 id="userFullName">John Doe</h4>
+                            <p id="userEmail">john.doe@example.com</p>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="/settings/account.html" class="dropdown-item">
+                        <i class="fas fa-user"></i>
+                        <span>Profil Saya</span>
+                    </a>
+                    <a href="/settings/account.html#security" class="dropdown-item">
+                        <i class="fas fa-lock"></i>
+                        <span>Keamanan</span>
+                    </a>
+                    <a href="/settings/account.html#preferences" class="dropdown-item">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Preferensi</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/settings/admin.html" class="dropdown-item" id="adminMenuItem">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Admin Panel</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" onclick="toggleTheme()">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                        <span id="themeText">Mode Gelap</span>
+                    </a>
+                    <a href="#" class="dropdown-item text-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Keluar</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Search Bar (Hidden by default) -->
+    <div class="mobile-search" id="mobileSearch" style="display: none;">
+        <div class="mobile-search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Cari..." id="mobileSearchInput">
+            <button class="close-search" onclick="toggleMobileSearch()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb-container" id="breadcrumb">
+        <div class="breadcrumb">
+            <a href="/dashboard/home.html" class="breadcrumb-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <i class="fas fa-chevron-right breadcrumb-separator"></i>
+            <span class="breadcrumb-item active" id="currentPage">Home</span>
+        </div>
+        
+        <!-- Page Actions -->
+        <div class="page-actions" id="pageActions">
+            <!-- Page specific actions will be loaded here -->
+        </div>
+    </div>
+</header>
+
+<!-- Template untuk notifikasi -->
+<template id="notificationTemplate">
+    <div class="notification-item unread">
+        <div class="notification-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-message"></div>
+            <div class="notification-time"></div>
+        </div>
+        <button class="notification-close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</template>
+
+<!-- Template untuk pesan -->
+<template id="messageTemplate">
+    <div class="message-item unread">
+        <div class="message-avatar">
+            <img src="/assets/images/avatar-default.svg" alt="">
+        </div>
+        <div class="message-content">
+            <div class="message-sender"></div>
+            <div class="message-preview"></div>
+            <div class="message-time"></div>
+        </div>
+    </div>
+</template>
+
+<!-- CSS Tambahan untuk Header -->
 <style>
-  header { background-color: #007bff; color: white; padding: 10px; text-align: center; }
-  nav a { color: white; margin: 0 10px; font-weight: bold; }
+/* Header Variables */
+:root {
+    --header-height: 70px;
+    --header-bg: white;
+    --header-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+/* Header Styles */
+.main-header {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    z-index: 1000;
+    background: var(--header-bg);
+    box-shadow: var(--header-shadow);
+    transition: left 0.3s ease;
+}
+
+.sidebar.collapsed + .main-header {
+    left: 70px;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+    padding: 0 20px;
+    background: white;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Toggle Button */
+.navbar-toggle {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    color: #4a5568;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.navbar-toggle:hover {
+    background: #f7fafc;
+    color: #667eea;
+}
+
+/* Brand/Logo */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.navbar-brand .logo {
+    transition: all 0.3s ease;
+    height: 30px;
+    width: auto;
+}
+
+.navbar-brand:hover .logo {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+/* Search Bar */
+.navbar-search {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    font-size: 14px;
+}
+
+.search-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 15px 0 40px;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    margin-top: 5px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1001;
+}
+
+/* Create Button */
+.btn-create {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-create i:first-child {
+    font-size: 12px;
+}
+
+/* Navbar Icons */
+.navbar-icon {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    color: #4a5568;
+    font-size: 18px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.navbar-icon:hover {
+    background: #f7fafc;
+    color: #667eea;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    min-width: 18px;
+    height: 18px;
+    background: #f56565;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+}
+
+/* User Menu */
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 10px;
+    border: none;
+    background: transparent;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navbar-user:hover {
+    background: #f7fafc;
+}
+
+.navbar-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.user-info {
+    text-align: left;
+    line-height: 1.2;
+}
+
+.user-name {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.user-role {
+    display: block;
+    font-size: 12px;
+    color: #718096;
+}
+
+/* Dropdown */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 300px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    margin-top: 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.dropdown.active .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-menu-right {
+    right: 0;
+    left: auto;
+}
+
+.dropdown-header {
+    padding: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdown-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    color: #4a5568;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #f7fafc;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background: #f7fafc;
+}
+
+.dropdown-item i {
+    width: 20px;
+    color: #718096;
+}
+
+.dropdown-item-content {
+    flex: 1;
+}
+
+.item-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.item-desc {
+    display: block;
+    font-size: 12px;
+    color: #a0aec0;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 5px 0;
+}
+
+.dropdown-footer {
+    padding: 10px 15px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.view-all {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.view-all:hover {
+    text-decoration: underline;
+}
+
+/* User Profile Header in Dropdown */
+.user-profile-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.user-avatar-large {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid white;
+}
+
+.user-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-details h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 5px;
+}
+
+.user-details p {
+    font-size: 12px;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Notification Items */
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 15px;
+    border-bottom: 1px solid #f7fafc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.notification-item:hover {
+    background: #f7fafc;
+}
+
+.notification-item.unread {
+    background: #ebf8ff;
+}
+
+.notification-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4a5568;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-message {
+    font-size: 13px;
+    color: #2d3748;
+    margin-bottom: 3px;
+}
+
+.notification-time {
+    font-size: 11px;
+    color: #a0aec0;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: #cbd5e0;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.notification-close:hover {
+    color: #f56565;
+}
+
+/* Message Items */
+.message-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 15px;
+    border-bottom: 1px solid #f7fafc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.message-item:hover {
+    background: #f7fafc;
+}
+
+.message-item.unread {
+    background: #ebf8ff;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.message-content {
+    flex: 1;
+}
+
+.message-sender {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 3px;
+}
+
+.message-preview {
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+.message-time {
+    font-size: 11px;
+    color: #a0aec0;
+}
+
+/* Breadcrumb */
+.breadcrumb-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: #f7fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #718096;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.breadcrumb-item:hover {
+    color: #667eea;
+}
+
+.breadcrumb-item.active {
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.breadcrumb-separator {
+    font-size: 10px;
+    color: #cbd5e0;
+}
+
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Mobile Search */
+.mobile-search {
+    display: none;
+    padding: 10px 20px;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+}
+
+.mobile-search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.mobile-search-container i {
+    position: absolute;
+    left: 12px;
+    color: #a0aec0;
+    font-size: 14px;
+}
+
+.mobile-search-container input {
+    flex: 1;
+    height: 40px;
+    padding: 0 40px 0 40px;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.mobile-search-container .close-search {
+    position: absolute;
+    right: 5px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    color: #a0aec0;
+    cursor: pointer;
+}
+
+.mobile-search-container .close-search:hover {
+    background: #f7fafc;
+    color: #f56565;
+}
+
+/* Dark Mode */
+.dark-theme .main-header,
+.dark-theme .navbar,
+.dark-theme .breadcrumb-container {
+    background: #1a202c;
+    border-color: #2d3748;
+}
+
+.dark-theme .navbar-toggle,
+.dark-theme .navbar-icon {
+    color: #cbd5e0;
+}
+
+.dark-theme .navbar-toggle:hover,
+.dark-theme .navbar-icon:hover {
+    background: #2d3748;
+    color: #667eea;
+}
+
+.dark-theme .search-input {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: white;
+}
+
+.dark-theme .search-input::placeholder {
+    color: #718096;
+}
+
+.dark-theme .dropdown-menu {
+    background: #1a202c;
+    border-color: #2d3748;
+}
+
+.dark-theme .dropdown-item {
+    color: #cbd5e0;
+    border-color: #2d3748;
+}
+
+.dark-theme .dropdown-item:hover {
+    background: #2d3748;
+}
+
+.dark-theme .dropdown-header,
+.dark-theme .dropdown-footer {
+    border-color: #2d3748;
+}
+
+.dark-theme .user-info .user-name {
+    color: white;
+}
+
+.dark-theme .user-info .user-role {
+    color: #a0aec0;
+}
+
+.dark-theme .breadcrumb-item {
+    color: #a0aec0;
+}
+
+.dark-theme .breadcrumb-item.active {
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .main-header {
+        left: 0 !important;
+    }
+    
+    .navbar-search {
+        display: none;
+    }
+    
+    .create-text {
+        display: none;
+    }
+    
+    .btn-create {
+        padding: 8px 12px;
+    }
+    
+    .user-info {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar-right {
+        gap: 10px;
+    }
+    
+    .mobile-search {
+        display: block;
+    }
+    
+    .breadcrumb-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .page-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar {
+        padding: 0 10px;
+    }
+    
+    .navbar-toggle {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .navbar-brand .logo {
+        width: 80px;
+    }
+    
+    .dropdown-menu {
+        width: 280px;
+    }
+}
 </style>
