@@ -1,4 +1,228 @@
 {
-  "api_key_1": "AIzaSyCk5zvpFkAcLW34mZ6HTlnO3UV4lypVbyk",
-  "api_key_2": "AIzaSyCGo2w3Z4dSYV0zYPRHy2p1HF1rH5ofyUQ"
+  "name": "YouTube Integration",
+  "version": "2.0.0",
+  "enabled": true,
+  "api": {
+    "baseUrl": "https://www.googleapis.com/youtube/v3",
+    "authUrl": "https://accounts.google.com/o/oauth2/auth",
+    "tokenUrl": "https://oauth2.googleapis.com/token",
+    "scopes": [
+      "https://www.googleapis.com/auth/youtube",
+      "https://www.googleapis.com/auth/youtube.upload",
+      "https://www.googleapis.com/auth/youtube.readonly",
+      "https://www.googleapis.com/auth/youtube.force-ssl"
+    ],
+    "quota": {
+      "dailyLimit": 10000,
+      "perUserLimit": 1000,
+      "costPerOperation": {
+        "search": 100,
+        "videoList": 1,
+        "videoInsert": 1600,
+        "videoUpdate": 50,
+        "videoDelete": 50,
+        "commentList": 1,
+        "commentInsert": 50,
+        "commentDelete": 50,
+        "channelList": 1,
+        "playlistList": 1,
+        "playlistInsert": 50,
+        "subscriptionList": 1,
+        "subscriptionInsert": 50
+      }
+    }
+  },
+  "oauth": {
+    "clientId": "YOUR_YOUTUBE_CLIENT_ID",
+    "clientSecret": "YOUR_YOUTUBE_CLIENT_SECRET",
+    "redirectUri": "https://autolive.com/auth/youtube/callback",
+    "responseType": "code",
+    "accessType": "offline",
+    "prompt": "consent",
+    "includeGrantedScopes": true
+  },
+  "upload": {
+    "maxFileSize": 256849586176,
+    "maxDuration": 43200,
+    "allowedFormats": [
+      "mp4",
+      "mov",
+      "avi",
+      "wmv",
+      "flv",
+      "mkv",
+      "webm",
+      "mpeg4",
+      "3gpp"
+    ],
+    "allowedResolutions": [
+      "2160p",
+      "1440p",
+      "1080p",
+      "720p",
+      "480p",
+      "360p",
+      "240p"
+    ],
+    "defaultPrivacy": "public",
+    "defaultCategory": 22,
+    "categories": [
+      { "id": 1, "name": "Film & Animation" },
+      { "id": 2, "name": "Autos & Vehicles" },
+      { "id": 10, "name": "Music" },
+      { "id": 15, "name": "Pets & Animals" },
+      { "id": 17, "name": "Sports" },
+      { "id": 18, "name": "Short Movies" },
+      { "id": 19, "name": "Travel & Events" },
+      { "id": 20, "name": "Gaming" },
+      { "id": 21, "name": "Videoblogging" },
+      { "id": 22, "name": "People & Blogs" },
+      { "id": 23, "name": "Comedy" },
+      { "id": 24, "name": "Entertainment" },
+      { "id": 25, "name": "News & Politics" },
+      { "id": 26, "name": "Howto & Style" },
+      { "id": 27, "name": "Education" },
+      { "id": 28, "name": "Science & Technology" },
+      { "id": 29, "name": "Nonprofits & Activism" },
+      { "id": 30, "name": "Movies" },
+      { "id": 31, "name": "Anime/Animation" },
+      { "id": 32, "name": "Action/Adventure" },
+      { "id": 33, "name": "Classics" },
+      { "id": 34, "name": "Comedy" },
+      { "id": 35, "name": "Documentary" },
+      { "id": 36, "name": "Drama" },
+      { "id": 37, "name": "Family" },
+      { "id": 38, "name": "Foreign" },
+      { "id": 39, "name": "Horror" },
+      { "id": 40, "name": "Sci-Fi/Fantasy" },
+      { "id": 41, "name": "Thriller" },
+      { "id": 42, "name": "Shorts" },
+      { "id": 43, "name": "Shows" },
+      { "id": 44, "name": "Trailers" }
+    ]
+  },
+  "download": {
+    "maxConcurrent": 5,
+    "timeout": 300000,
+    "retryCount": 3,
+    "retryDelay": 5000,
+    "tempDir": "storage/temp/downloads",
+    "outputDir": "storage/downloads/videos",
+    "availableQualities": [
+      "highest",
+      "1080p",
+      "720p",
+      "480p",
+      "360p",
+      "240p",
+      "lowest"
+    ],
+    "availableFormats": [
+      "mp4",
+      "webm",
+      "3gp",
+      "mkv",
+      "flv",
+      "avi"
+    ],
+    "extractAudio": true,
+    "audioFormats": ["mp3", "aac", "m4a", "wav", "flac"],
+    "subtitles": {
+      "enabled": true,
+      "autoGenerate": true,
+      "languages": ["id", "en", "ar", "es", "fr", "de", "ja", "ko", "zh", "ru"],
+      "format": "vtt"
+    },
+    "thumbnail": {
+      "enabled": true,
+      "size": "medium",
+      "format": "jpg"
+    },
+    "metadata": {
+      "enabled": true,
+      "saveJson": true,
+      "fields": [
+        "title",
+        "description",
+        "tags",
+        "categoryId",
+        "publishedAt",
+        "viewCount",
+        "likeCount",
+        "commentCount",
+        "duration",
+        "definition",
+        "caption"
+      ]
+    }
+  },
+  "analytics": {
+    "enabled": true,
+    "metrics": [
+      "views",
+      "estimatedMinutesWatched",
+      "averageViewDuration",
+      "averageViewPercentage",
+      "subscribersGained",
+      "subscribersLost",
+      "likes",
+      "dislikes",
+      "comments",
+      "shares",
+      "videosAddedToPlaylists",
+      "videosRemovedFromPlaylists",
+      "redViews",
+      "redWatchTime",
+      "cardClickRate",
+      "cardTeaserClickRate",
+      "annotationClickThroughRate",
+      "annotationCloseRate"
+    ],
+    "dimensions": [
+      "day",
+      "video",
+      "playlist",
+      "country",
+      "deviceType",
+      "operatingSystem",
+      "trafficSource",
+      "subscribedStatus"
+    ],
+    "reportTypes": [
+      "basic",
+      "demographics",
+      "playback",
+      "engagement",
+      "revenue"
+    ]
+  },
+  "limits": {
+    "maxTitleLength": 100,
+    "maxDescriptionLength": 5000,
+    "maxTagsCount": 500,
+    "maxPlaylistVideos": 5000,
+    "maxCommentsPerRequest": 100
+  },
+  "webhook": {
+    "enabled": false,
+    "url": "",
+    "events": [
+      "video.uploaded",
+      "video.processed",
+      "video.deleted",
+      "comment.added",
+      "comment.deleted"
+    ],
+    "secret": ""
+  },
+  "cache": {
+    "enabled": true,
+    "ttl": 3600,
+    "maxSize": 100
+  },
+  "rateLimit": {
+    "enabled": true,
+    "maxRequests": 100,
+    "timeWindow": 60
+  }
 }
