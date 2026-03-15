@@ -15,20 +15,20 @@ package-lock.json
 
 # Logs
 logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-*.pid
-*.seed
-*.pid.lock
+.log
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+lerna-debug.log
+.pid
+.seed
+.pid.lock
 
 # Log archives
 logs/archive/
-*.gz
-*.tar
+.gz
+.tar
 
 # PM2 logs
 .pm2/
-*.pm2
+.pm2
