@@ -12,3 +12,23 @@ package-lock.json
 
 .DS_Store
 .vscode
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.pid
+*.seed
+*.pid.lock
+
+# Log archives
+logs/archive/
+*.gz
+*.tar
+
+# PM2 logs
+.pm2/
+*.pm2
