@@ -1,4 +1,215 @@
 {
-  "privateMode": true,
-  "debug": true
+  "name": "Private Mode Settings",
+  "version": "1.0.0",
+  "enabled": false,
+  "security": {
+    "encryption": {
+      "algorithm": "aes-256-gcm",
+      "keyRotation": 30,
+      "keyLength": 32,
+      "ivLength": 12
+    },
+    "session": {
+      "timeout": 900,
+      "extendOnActivity": true,
+      "maxConcurrent": 1,
+      "requireReauth": true
+    },
+    "authentication": {
+      "requirePassword": true,
+      "require2FA": false,
+      "biometricEnabled": false,
+      "pinEnabled": false,
+      "pinLength": 6,
+      "maxAttempts": 5,
+      "lockoutDuration": 300
+    },
+    "dataProtection": {
+      "encryptAtRest": true,
+      "encryptInTransit": true,
+      "maskSensitiveData": true,
+      "sensitiveFields": [
+        "email",
+        "phone",
+        "address",
+        "payment_info",
+        "access_tokens",
+        "refresh_tokens",
+        "passwords"
+      ]
+    }
+  },
+  "storage": {
+    "encrypted": {
+      "downloads": true,
+      "uploads": true,
+      "processed": true,
+      "temp": false,
+      "database": true,
+      "config": true,
+      "logs": false
+    },
+    "secureDelete": {
+      "enabled": true,
+      "method": "overwrite",
+      "passes": 3,
+      "verifyDeletion": true
+    },
+    "backup": {
+      "encrypted": true,
+      "compress": true,
+      "location": "storage/private/backups",
+      "retention": 30
+    }
+  },
+  "network": {
+    "vpnRequired": false,
+    "vpnList": [],
+    "proxyRequired": false,
+    "proxyList": [],
+    "allowedIPs": [],
+    "blockedIPs": [],
+    "geoRestriction": {
+      "enabled": false,
+      "allowedCountries": [],
+      "blockedCountries": []
+    },
+    "torEnabled": false,
+    "dnsOverHttps": true
+  },
+  "browser": {
+    "fingerprintProtection": true,
+    "canvasProtection": true,
+    "webglProtection": true,
+    "audioContextProtection": true,
+    "timeZoneSpoofing": false,
+    "languageSpoofing": false,
+    "userAgentSpoofing": false,
+    "screenResolutionSpoofing": false,
+    "hardwareConcurrencySpoofing": false,
+    "deviceMemorySpoofing": false,
+    "doNotTrack": true,
+    "clearDataOnExit": {
+      "cookies": true,
+      "cache": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": true,
+      "history": true,
+      "downloads": false
+    }
+  },
+  "privacy": {
+    "dataCollection": {
+      "analytics": false,
+      "crashReports": false,
+      "usageStats": false,
+      "personalization": false
+    },
+    "thirdParty": {
+      "allowCookies": false,
+      "allowTracking": false,
+      "allowFingerprinting": false,
+      "allowAds": false
+    },
+    "content": {
+      "blockAdult": true,
+      "blockViolence": true,
+      "blockHateSpeech": true,
+      "blockGambling": true,
+      "customBlocklist": []
+    },
+    "social": {
+      "disableShares": true,
+      "disableComments": true,
+      "disableMentions": true,
+      "disableTags": true,
+      "disableMessages": false
+    }
+  },
+  "audit": {
+    "enabled": true,
+    "logLevel": "info",
+    "logEvents": [
+      "login",
+      "logout",
+      "failed_login",
+      "settings_change",
+      "data_access",
+      "data_export",
+      "data_deletion",
+      "session_start",
+      "session_end",
+      "api_call"
+    ],
+    "retention": 90,
+    "storage": "database",
+    "encryption": true,
+    "signing": true
+  },
+  "incognito": {
+    "enabled": false,
+    "noHistory": true,
+    "noDownloads": false,
+    "noFormData": true,
+    "noCookies": true,
+    "noCache": true,
+    "noExtensions": false,
+    "noBookmarks": false
+  },
+  "masterPassword": {
+    "enabled": false,
+    "hash": "",
+    "salt": "",
+    "hint": "",
+    "timeout": 300,
+    "lockOnTimeout": true,
+    "lockOnSleep": true,
+    "lockOnTabSwitch": false
+  },
+  "stealthMode": {
+    "enabled": false,
+    "hideOnlineStatus": true,
+    "hideTypingIndicator": true,
+    "hideReadReceipts": true,
+    "hideLastSeen": true,
+    "hideProfileViews": true,
+    "hideStoryViews": true
+  },
+  "encryptedMessaging": {
+    "enabled": false,
+    "protocol": "signal",
+    "perfectForwardSecrecy": true,
+    "messageRetention": 30,
+    "mediaRetention": 7,
+    "disappearingMessages": {
+      "enabled": true,
+      "defaultTimer": 86400
+    }
+  },
+  "twoFactor": {
+    "enabled": false,
+    "methods": ["app", "sms", "email"],
+    "backupCodes": [],
+    "rememberDevice": true,
+    "rememberDuration": 30,
+    "requireOnLogin": true,
+    "requireOnSettings": true
+  },
+  "dataRetention": {
+    "userData": 730,
+    "activityLogs": 90,
+    "chatHistory": 365,
+    "uploadHistory": 365,
+    "downloadHistory": 365,
+    "searchHistory": 30,
+    "notificationHistory": 30
+  },
+  "export": {
+    "format": "encrypted",
+    "includeMedia": true,
+    "includeMetadata": true,
+    "maxSize": 1073741824,
+    "compression": true
+  }
 }
