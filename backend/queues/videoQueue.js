@@ -43,6 +43,41 @@ videoQueue.process('video transcoding', async (job) => {
   }
 });
 
+// backend/queues/videoQueue.js
+const Queue = require('bull');
+const tiktokDownloader = require('../utils/tiktok-downloader');
+
+const videoQueue = new Queue('video processing', {
+  redis: {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: process.env.REDIS_PORT || 6379
+  }
+});
+
+videoQueue.process('tiktok download', async (job) => {
+  const { url, videoId } = job.data;
+  
+  console.log(`Downloading TikTok: ${url}`);
+  
+  try {
+    const result = await tiktokDownloader.downloadVideo(url);
+    return {
+      success: true,
+      videoId,
+      ...result
+    };
+  } catch (error) {
+    console.error('TikTok download failed:', error);
+    throw error;
+  }
+});
+
+videoQueue.process('video transcoding', async (job) => {
+  console.log('Processing video:', job.data);
+  return { success: true };
+});
+
+
 // Event handlers
 videoQueue.on('completed', (job, result) => {
   console.log(`Job ${job.id} untuk video ${result.videoId} selesai`);
