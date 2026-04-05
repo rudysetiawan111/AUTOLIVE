@@ -90,9 +90,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="max-w-5xl mx-auto">
-        <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-gray-600"><ArrowLeft size={20} /> Back</button>
+    <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      <div className="max-w-6xl mx-auto">
+        <button onClick={() => router.back()} className="mb-6 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+          <ArrowLeft size={20} /> Back
+        </button>
         <div className="grid md:grid-cols-2 gap-8">
           <div>
             <h2 className="text-xl font-bold mb-4">Choose Plan</h2>
@@ -100,29 +102,96 @@ export default function RegisterPage() {
               const allowed = allowedPlans().includes(p.id);
               const Icon = p.icon;
               return (
-                <div key={p.id} onClick={() => allowed && setPlan(p.id as any)} className={`p-4 mb-3 rounded-xl border-2 cursor-pointer ${plan === p.id ? 'border-red-500 bg-red-50' : 'border-gray-300'} ${!allowed ? 'opacity-50' : ''}`}>
-                  <div className="flex justify-between"><div><Icon className="w-6 h-6" /><h3 className="font-bold">{p.name}</h3><p className="text-red-500 font-bold">{p.price}</p></div>{plan === p.id && <div className="w-6 h-6 rounded-full bg-red-500 text-white text-center">✓</div>}</div>
-                  <ul className="mt-2 text-sm">{p.features.map(f => <li key={f}>• {f}</li>)}</ul>
+                <div
+                  key={p.id}
+                  onClick={() => allowed && setPlan(p.id as any)}
+                  className={`p-4 mb-3 rounded-xl border-2 cursor-pointer transition ${
+                    plan === p.id ? 'border-primary bg-primary/5' : 'border-gray-300 dark:border-gray-700'
+                  } ${!allowed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex justify-between">
+                    <div>
+                      <Icon className="w-6 h-6" style={{ color: 'var(--text-primary)' }} />
+                      <h3 className="font-bold">{p.name}</h3>
+                      <p className="text-primary font-bold">{p.price}</p>
+                    </div>
+                    {plan === p.id && <div className="w-6 h-6 rounded-full bg-primary text-white text-center">✓</div>}
+                  </div>
+                  <ul className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {p.features.map(f => <li key={f}>• {f}</li>)}
+                  </ul>
                 </div>
               );
             })}
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
+
+          <div className="card p-6">
             <h2 className="text-2xl font-bold mb-6">Create Account</h2>
             {step === 1 ? (
               <div className="space-y-4">
-                <input type="text" placeholder="Full Name" value={form.full_name} onChange={(e) => setForm({...form, full_name: e.target.value})} className="w-full p-3 rounded-lg border" />
-                <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} className="w-full p-3 rounded-lg border" />
-                <input type="tel" placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} className="w-full p-3 rounded-lg border" />
-                <input type="password" placeholder="Password" value={form.password} onChange={(e) => setForm({...form, password: e.target.value})} className="w-full p-3 rounded-lg border" />
-                <input type="password" placeholder="Confirm Password" value={form.confirm} onChange={(e) => setForm({...form, confirm: e.target.value})} className="w-full p-3 rounded-lg border" />
-                <button onClick={sendOtp} disabled={loading} className="w-full bg-red-600 text-white p-3 rounded-lg">{loading ? 'Sending...' : 'Send Verification Code'}</button>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={form.full_name}
+                  onChange={(e) => setForm({...form, full_name: e.target.value})}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={(e) => setForm({...form, email: e.target.value})}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone (optional)"
+                  value={form.phone}
+                  onChange={(e) => setForm({...form, phone: e.target.value})}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={form.password}
+                  onChange={(e) => setForm({...form, password: e.target.value})}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={form.confirm}
+                  onChange={(e) => setForm({...form, confirm: e.target.value})}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <button
+                  onClick={sendOtp}
+                  disabled={loading}
+                  className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-xl transition disabled:opacity-50"
+                >
+                  {loading ? 'Sending...' : 'Send Verification Code'}
+                </button>
               </div>
             ) : (
               <div>
-                <input type="text" placeholder="6-digit code" value={otp} onChange={(e) => setOtp(e.target.value)} className="w-full p-3 rounded-lg border text-center text-2xl tracking-widest" maxLength={6} />
-                <button onClick={verifyAndRegister} disabled={loading} className="w-full mt-4 bg-green-600 text-white p-3 rounded-lg">{loading ? 'Verifying...' : 'Verify & Register'}</button>
-                <button onClick={() => setStep(1)} className="w-full mt-2 text-sm text-gray-500">← Back</button>
+                <input
+                  type="text"
+                  placeholder="6-digit code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-center text-2xl tracking-widest focus:outline-none focus:ring-2 focus:ring-primary"
+                  maxLength={6}
+                />
+                <button
+                  onClick={verifyAndRegister}
+                  disabled={loading}
+                  className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50"
+                >
+                  {loading ? 'Verifying...' : 'Verify & Register'}
+                </button>
+                <button onClick={() => setStep(1)} className="w-full mt-2 text-sm hover:underline" style={{ color: 'var(--text-secondary)' }}>
+                  ← Back
+                </button>
               </div>
             )}
           </div>

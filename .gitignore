@@ -14,12 +14,14 @@ out/
 .env
 .env.local
 .env.production
+.env.development
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
@@ -37,3 +39,7 @@ temp/
 # Uploads
 uploads/
 payment_proofs/
+
+# Cache
+.cache/
+*.cache

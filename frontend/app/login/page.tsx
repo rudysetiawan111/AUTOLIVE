@@ -34,21 +34,16 @@ export default function LoginPage() {
   const { theme, toggleTheme } = useTheme();
   const supabase = createClient();
 
-  // Cek session dan redirect berdasarkan role dari database
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        if (userData?.role === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
-        }
+        const { data: userData } = await supabase.from('users').select('role, subscription').eq('id', session.user.id).single();
+        if (userData?.role === 'admin') router.push('/dashboard/admin');
+        else if (userData?.subscription === 'premium') router.push('/dashboard/premium');
+        else if (userData?.subscription === 'pro') router.push('/dashboard/pro');
+        else if (userData?.subscription === 'free') router.push('/dashboard/free');
+        else router.push('/dashboard');
       }
     };
     checkSession();
@@ -59,13 +54,12 @@ export default function LoginPage() {
     if (!email || !password) return toast.error('Email and password required');
     setLoading(true);
     try {
-      // Cek apakah admin
+      // Cek apakah email admin
       if (ADMIN_EMAILS.includes(email) && password === ADMIN_PASSWORD) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          await supabase.auth.signUp({ email, password, options: { data: { full_name: email.split('@')[0] } } });
-        }
+        if (error) await supabase.auth.signUp({ email, password, options: { data: { full_name: email.split('@')[0] } } });
         setTempAdminEmail(email);
+        toast.success('Selamat datang Mas Admin! Silakan pilih akses akun yang mau dipakai.');
         setShowRoleModal(true);
         setLoading(false);
         return;
@@ -73,8 +67,14 @@ export default function LoginPage() {
       // User biasa
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: userData } = await supabase.from('users').select('subscription').eq('id', user?.id).single();
+      const role = userData?.subscription || 'free';
       toast.success(t('login_success'));
-      router.push('/dashboard');
+      if (role === 'premium') router.push('/dashboard/premium');
+      else if (role === 'pro') router.push('/dashboard/pro');
+      else if (role === 'free') router.push('/dashboard/free');
+      else router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -82,195 +82,140 @@ export default function LoginPage() {
     }
   };
 
-  const handleRoleSelect = async () => {
+  const handleRoleSelect = async (role: string) => {
     setShowRoleModal(false);
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const expiry = selectedRole === 'free' ? new Date(Date.now() + 7*24*60*60*1000).toISOString() : null;
+      const expiry = role === 'free' ? new Date(Date.now() + 7*24*60*60*1000).toISOString() : null;
       await supabase.from('users').upsert({
         id: user.id,
         email: user.email,
         full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
-        role: selectedRole === 'admin' ? 'admin' : 'user',
-        subscription: selectedRole === 'free' ? 'free' : selectedRole,
+        role: role === 'admin' ? 'admin' : 'user',
+        subscription: role === 'free' ? 'free' : role,
         subscription_expiry: expiry,
       });
     }
-    toast.success(`Logged in as ${selectedRole.toUpperCase()}`);
-    if (selectedRole === 'admin') {
-      router.push('/admin');
-    } else {
-      router.push('/dashboard');
-    }
+    toast.success(`Anda masuk sebagai ${role.toUpperCase()}`);
+    if (role === 'admin') router.push('/dashboard/admin');
+    else if (role === 'premium') router.push('/dashboard/premium');
+    else if (role === 'pro') router.push('/dashboard/pro');
+    else router.push('/dashboard/free');
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 p-4">
-      {/* Tombol toggle bahasa dan tema */}
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-8" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="fixed top-4 right-4 flex gap-2 z-10">
-        <button onClick={() => setLanguage(language === 'en' ? 'id' : 'en')} className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-          <Globe className="w-5 h-5" />
-          <span className="ml-1 text-sm">{language === 'en' ? 'ID' : 'EN'}</span>
+        <button onClick={() => setLanguage(language === 'en' ? 'id' : 'en')} className="p-2 rounded-lg shadow-md" style={{ backgroundColor: 'var(--bg-card)' }}>
+          <Globe className="w-5 h-5" /><span className="ml-1 text-sm">{language === 'en' ? 'ID' : 'EN'}</span>
         </button>
-        <button onClick={toggleTheme} className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-          {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-gray-700" />}
+        <button onClick={toggleTheme} className="p-2 rounded-lg shadow-md" style={{ backgroundColor: 'var(--bg-card)' }}>
+          {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5" />}
         </button>
       </div>
 
-      <div className="w-full max-w-4xl">
-        {/* Logo dan judul */}
+      <div className="w-full max-w-6xl px-4">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-r from-primary to-secondary mb-4 shadow-lg">
-            <Upload className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-r from-primary to-secondary mb-4 shadow-lg">
+            <Upload className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">AUTOLIVE</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Auto Content Upload Platform</p>
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">AUTOLIVE</h1>
+          <p className="mt-2 text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>Auto Content Upload Platform</p>
         </div>
 
-        {/* Login Form - di atas */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5 text-gray-400" /> : <Eye className="w-5 h-5 text-gray-400" />}
-                </button>
-              </div>
-            </div>
-            <button type="submit" disabled={loading} className="w-full bg-primary hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50">
-              {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
-            </button>
-          </form>
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-primary hover:underline font-medium">Register now</Link>
-          </p>
-          <div className="mt-6 text-center text-xs text-gray-400 border-t pt-4">
-            © 2026 AUTOLIVE by <span className="font-semibold">RS</span>
-          </div>
-        </div>
-
-        {/* Features Grid - di bawah login, vertikal */}
-        <div>
-          <h3 className="text-center text-gray-700 dark:text-gray-400 text-lg font-semibold mb-4">Powerful Features</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {features.map((feature, idx) => (
-              <div
-                key={idx}
-                onClick={() => setSelectedFeature(feature)}
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:shadow-lg transition-all cursor-pointer group border border-gray-200 dark:border-gray-700 hover:border-primary/50"
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`inline-flex p-2 rounded-lg bg-gradient-to-r ${feature.color} bg-opacity-10 group-hover:bg-opacity-20 transition`}>
-                    <feature.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800 dark:text-white">
-                      {language === 'en' ? feature.titleEn : feature.titleId}
-                    </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {language === 'en' ? feature.descEn : feature.descId}
-                    </p>
-                  </div>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="card p-6 md:p-8">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('email')}</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="you@example.com" required />
                 </div>
               </div>
-            ))}
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('password')}</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="••••••••" required />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2">
+                    {showPassword ? <EyeOff className="w-5 h-5 text-gray-400" /> : <Eye className="w-5 h-5 text-gray-400" />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" disabled={loading} className="w-full btn-primary font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><LogIn className="w-5 h-5" /> {t('login')}</>}
+              </button>
+            </form>
+            <p className="text-center text-sm mt-6">
+              {t('dont_have_account')} <Link href="/register" className="text-primary hover:underline font-medium">{t('register_now')}</Link>
+            </p>
+            <div className="mt-6 text-center text-xs border-t pt-4" style={{ color: 'var(--text-secondary)', borderColor: 'var(--text-secondary)' }}>
+              © 2026 AUTOLIVE by RS
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-center text-lg font-semibold mb-4" style={{ color: 'var(--text-secondary)' }}>Powerful Features</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {features.map((feature, idx) => (
+                <div key={idx} onClick={() => setSelectedFeature(feature)} className="card p-4 cursor-pointer hover:shadow-lg transition">
+                  <div className="flex items-start gap-3">
+                    <div className={`inline-flex p-2 rounded-lg bg-gradient-to-r ${feature.color} bg-opacity-10`}>
+                      <feature.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{language === 'en' ? feature.titleEn : feature.titleId}</h4>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{language === 'en' ? feature.descEn : feature.descId}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mt-8 text-center">
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
-            <div className="text-2xl font-bold text-primary">10K+</div>
-            <div className="text-xs text-gray-500">Users</div>
-          </div>
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
-            <div className="text-2xl font-bold text-primary">1M+</div>
-            <div className="text-xs text-gray-500">Videos</div>
-          </div>
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-3">
-            <div className="text-2xl font-bold text-primary">50+</div>
-            <div className="text-xs text-gray-500">Countries</div>
-          </div>
+          <div className="card p-3"><div className="text-2xl font-bold text-primary">10K+</div><div className="text-xs" style={{ color: 'var(--text-secondary)' }}>Users</div></div>
+          <div className="card p-3"><div className="text-2xl font-bold text-primary">1M+</div><div className="text-xs" style={{ color: 'var(--text-secondary)' }}>Videos</div></div>
+          <div className="card p-3"><div className="text-2xl font-bold text-primary">50+</div><div className="text-xs" style={{ color: 'var(--text-secondary)' }}>Countries</div></div>
         </div>
       </div>
 
-      {/* Feature Modal */}
       {selectedFeature && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setSelectedFeature(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="card max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <div className={`inline-flex p-2 rounded-lg bg-gradient-to-r ${selectedFeature.color} bg-opacity-10`}>
                 <selectedFeature.icon className="w-6 h-6 text-primary" />
               </div>
-              <button onClick={() => setSelectedFeature(null)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
-                <X className="w-5 h-5" />
-              </button>
+              <button onClick={() => setSelectedFeature(null)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full"><X className="w-5 h-5" /></button>
             </div>
             <h3 className="text-xl font-bold mb-2">{language === 'en' ? selectedFeature.titleEn : selectedFeature.titleId}</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">{language === 'en' ? selectedFeature.longDescEn : selectedFeature.longDescId}</p>
-            <button onClick={() => setSelectedFeature(null)} className="w-full py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition">Close</button>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>{language === 'en' ? selectedFeature.longDescEn : selectedFeature.longDescId}</p>
+            <button onClick={() => setSelectedFeature(null)} className="w-full py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">Close</button>
           </div>
         </div>
       )}
 
-      {/* Role Selection Modal for Admin */}
       {showRoleModal && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Select Access Role</h2>
-            <p className="text-gray-500 mb-4">Email: {tempAdminEmail}</p>
+          <div className="card max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-4">Silakan pilih akses akun yang mau dipakai</h2>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>Email: {tempAdminEmail}</p>
             <div className="space-y-3">
-              {[
-                { role: 'admin', label: '👑 Admin', desc: 'Full access to Admin Panel' },
-                { role: 'premium', label: '⭐ Premium', desc: 'All features ($5/month)' },
-                { role: 'pro', label: '⚡ Pro', desc: 'All features except scheduler ($3/month)' },
-                { role: 'free', label: '🎁 Free Trial', desc: 'Limited features for 7 days' },
-              ].map((item) => (
-                <button
-                  key={item.role}
-                  onClick={() => { setSelectedRole(item.role); handleRoleSelect(); }}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition ${
-                    selectedRole === item.role
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
-                  }`}
-                >
-                  <div className="text-left">
-                    <div className="font-semibold">{item.label}</div>
-                    <div className="text-xs text-gray-500">{item.desc}</div>
-                  </div>
-                  {selectedRole === item.role && <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs">✓</div>}
-                </button>
-              ))}
+              <button onClick={() => handleRoleSelect('admin')} className="w-full flex items-center justify-between p-3 rounded-lg border-2 transition hover:border-primary">
+                <div><div className="font-semibold">👑 Admin</div><div className="text-xs text-gray-500">Akses penuh ke Panel Admin</div></div>
+              </button>
+              <button onClick={() => handleRoleSelect('premium')} className="w-full flex items-center justify-between p-3 rounded-lg border-2 transition hover:border-primary">
+                <div><div className="font-semibold">⭐ Premium</div><div className="text-xs text-gray-500">Akses semua fitur ($5/bulan)</div></div>
+              </button>
+              <button onClick={() => handleRoleSelect('pro')} className="w-full flex items-center justify-between p-3 rounded-lg border-2 transition hover:border-primary">
+                <div><div className="font-semibold">⚡ Pro</div><div className="text-xs text-gray-500">Akses semua fitur kecuali jadwal ($3/bulan)</div></div>
+              </button>
+              <button onClick={() => handleRoleSelect('free')} className="w-full flex items-center justify-between p-3 rounded-lg border-2 transition hover:border-primary">
+                <div><div className="font-semibold">🎁 Free</div><div className="text-xs text-gray-500">Akses terbatas 7 hari</div></div>
+              </button>
             </div>
           </div>
         </div>
