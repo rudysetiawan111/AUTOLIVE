@@ -1,76 +1,169 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { ArrowLeft, Copy, CheckCircle, Building, Wallet, CreditCard, Upload } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function PaymentPage() {
-  const [plan, setPlan] = useState<'pro'|'premium'|null>(null);
-  const [userId, setUserId] = useState<string|null>(null);
-  const [file, setFile] = useState<File|null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [copied, setCopied] = useState<string|null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const role = searchParams.get('role'); // 'pro' atau 'premium'
+  const email = searchParams.get('email');
+  
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
   const supabase = createClient();
 
+  const price = role === 'pro' ? 3 : role === 'premium' ? 5 : 0;
+  const title = role === 'pro' ? 'Pro - $3/bulan' : role === 'premium' ? 'Premium - $5/bulan' : 'Paket Tidak Valid';
+  
   useEffect(() => {
-    const p = localStorage.getItem('pending_plan') as 'pro'|'premium'|null;
-    const uid = localStorage.getItem('pending_user_id');
-    if (p && uid) { setPlan(p); setUserId(uid); }
-    else router.push('/register');
-  }, []);
+    if (!role || (role !== 'pro' && role !== 'premium')) {
+      toast.error('Paket tidak valid');
+      router.push('/register');
+      return;
+    }
+    if (!email) {
+      toast.error('Email tidak ditemukan');
+      router.push('/register');
+      return;
+    }
 
-  const price = plan === 'pro' ? 3 : 5;
-  const methods = [
-    { id: 'mandiri', name: 'Bank Mandiri', icon: <Building />, account: '1670010490901', owner: 'RUDY SETIAWAN' },
-    { id: 'dana', name: 'DANA', icon: <Wallet />, account: '0895405573659', owner: 'RUDY SETIAWAN' },
-    { id: 'paypal', name: 'PayPal', icon: <CreditCard />, account: 'https://www.paypal.me/RudySetiawan111', owner: 'Rudy Setiawan', isLink: true },
-  ];
+    // Ambil QR code dari database (tabel settings)
+    const fetchQr = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', `qr_${role}`)
+        .single();
+      
+      if (error || !data?.value) {
+        setQrUrl(null);
+      } else {
+        setQrUrl(data.value);
+      }
+      setLoading(false);
+    };
+    fetchQr();
+  }, [role, email, router, supabase]);
 
-  const copy = (text: string, id: string) => { navigator.clipboard.writeText(text); setCopied(id); setTimeout(() => setCopied(null), 2000); toast.success('Copied'); };
-
-  const confirm = async () => {
-    if (!file) return toast.error('Upload payment proof');
-    setUploading(true);
+  const handleConfirmPayment = async () => {
+    if (!email || !role) return;
+    setConfirming(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `${userId}_${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from('payment_proofs').upload(fileName, file);
-      if (uploadErr) throw uploadErr;
-      const { data: urlData } = supabase.storage.from('payment_proofs').getPublicUrl(fileName);
-      await supabase.from('subscriptions').insert({ user_id: userId, plan, amount: price, payment_proof_url: urlData.publicUrl, status: 'pending' });
-      const expiry = new Date(); expiry.setMonth(expiry.getMonth()+1);
-      await supabase.from('users').update({ subscription: plan, subscription_expiry: expiry.toISOString() }).eq('id', userId);
-      localStorage.removeItem('pending_plan'); localStorage.removeItem('pending_user_id');
-      toast.success('Payment confirmed!');
-      router.push('/dashboard');
-    } catch (err: any) { toast.error(err.message); }
-    finally { setUploading(false); }
+      // Cari user berdasarkan email
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .single();
+      
+      if (userError || !userData) {
+        throw new Error('User tidak ditemukan');
+      }
+      
+      // Update subscription user (simulasi konfirmasi pembayaran)
+      const expiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          subscription: role,
+          subscription_expiry: expiry,
+          role: 'user'
+        })
+        .eq('id', userData.id);
+      
+      if (updateError) throw updateError;
+      
+      toast.success('Pembayaran dikonfirmasi! Mengalihkan ke dashboard...');
+      setTimeout(() => {
+        if (role === 'pro') router.push('/dashboard/pro');
+        else router.push('/dashboard/premium');
+      }, 1500);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal konfirmasi');
+    } finally {
+      setConfirming(false);
+    }
   };
 
-  if (!plan) return <div className="p-8 text-center">Loading...</div>;
-
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="max-w-4xl mx-auto">
-        <button onClick={() => router.back()} className="mb-6 flex items-center gap-2"><ArrowLeft size={20} /> Back</button>
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-            <div className="space-y-3"><div className="flex justify-between"><span>Plan</span><span className="capitalize font-bold">{plan}</span></div><div className="flex justify-between"><span>Price</span><span>${price} USD</span></div><div className="flex justify-between"><span>Total</span><span className="text-xl font-bold text-red-500">${price} USD</span></div></div>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="w-full max-w-lg px-4">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1 text-sm mb-4 hover:underline"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          <ArrowLeft className="w-4 h-4" /> Kembali
+        </button>
+
+        <div className="card p-6">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold mb-2">Selesaikan Pembayaran</h1>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {email}
+            </p>
+            <div className="inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-primary to-secondary text-white">
+              {title}
+            </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Payment Methods</h2>
-            {methods.map(m => (
-              <div key={m.id} className="p-3 border rounded-lg mb-3">
-                <div className="flex items-center gap-2">{m.icon} <span className="font-semibold">{m.name}</span></div>
-                <div className="flex justify-between items-center mt-2"><span>{m.account}</span>{m.isLink ? <a href={m.account} target="_blank" className="bg-red-600 text-white px-3 py-1 rounded">Pay</a> : <button onClick={() => copy(m.account, m.id)} className="text-sm">{copied === m.id ? <CheckCircle size={16} /> : <Copy size={16} />} Copy</button>}</div>
+
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p>Memuat QR Code...</p>
+            </div>
+          ) : qrUrl ? (
+            <>
+              <div className="flex justify-center mb-6">
+                <img
+                  src={qrUrl}
+                  alt="QR Code Pembayaran"
+                  className="w-64 h-64 object-contain border rounded-xl p-2 bg-white"
+                />
               </div>
-            ))}
-            <div className="mt-4"><label className="block mb-1">Upload Payment Proof</label><input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} /></div>
-            <button onClick={confirm} disabled={uploading} className="w-full mt-6 bg-green-600 text-white p-3 rounded-lg">{uploading ? 'Processing...' : `Confirm Payment $${price}`}</button>
-          </div>
+              <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Scan QR Code di atas untuk melakukan pembayaran sebesar <strong>${price}</strong>
+              </p>
+              <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 rounded-lg p-3 mb-6">
+                <p className="text-xs text-center text-yellow-800 dark:text-yellow-300">
+                  ⚠️ Setelah melakukan pembayaran, tekan tombol konfirmasi di bawah.
+                  <br />
+                  Pembayaran akan diverifikasi secara manual oleh admin.
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
+              <p className="mb-2">QR Code untuk paket ini belum tersedia.</p>
+              <p className="text-sm text-gray-500">Silakan hubungi admin atau gunakan transfer manual ke:</p>
+              <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <p className="font-mono text-sm">Bank Mandiri: 123-456-7890</p>
+                <p className="font-mono text-sm">a.n. AUTOLIVE Official</p>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={handleConfirmPayment}
+            disabled={confirming}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition mt-4"
+          >
+            {confirming ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <><CheckCircle className="w-5 h-5" /> Konfirmasi Pembayaran Selesai</>
+            )}
+          </button>
+
+          <p className="text-center text-xs mt-6 text-gray-500">
+            Dengan mengkonfirmasi, Anda menyetujui <a href="#" className="underline">Syarat & Ketentuan</a> yang berlaku.
+          </p>
         </div>
       </div>
     </div>
