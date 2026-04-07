@@ -1,237 +1,202 @@
+// app/dashboard/features/workflow-automation/page.tsx
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import {
-  Play, Loader2, CheckCircle2, RefreshCcw,
-  ListChecks, Activity, ShieldAlert, TrendingUp, DollarSign
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { 
+  Youtube, 
+  Music2, 
+  Play, 
+  Settings, 
+  Calendar, 
+  Video,
+  CheckCircle,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import YouTubeConnect from '@/components/YouTubeConnect';
+import TikTokConnect from '@/components/TikTokConnect';
+import AutomationSettings from '@/components/AutomationSettings';
 
-// ================= TYPES =================
-interface WorkflowItem {
-  id: string;
-  name: string;
-  status: 'idle' | 'running' | 'success' | 'failed';
-  progress: number;
-  error_message?: string;
+interface ConnectedAccount {
+  platform: 'youtube' | 'tiktok';
+  channelName: string;
+  channelId: string;
+  thumbnail: string;
+  subscribers?: number;
 }
 
-interface ResultItem {
-  keyword: string;
-  status: string;
-  retry: number;
-  earning?: { revenue: number };
-}
-
-// ================= COMPONENT =================
 export default function WorkflowAutomationPage() {
-  const supabase = createClient();
-
-  const [workflows, setWorkflows] = useState<WorkflowItem[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { data: session } = useSession();
+  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
+  const [isConnected, setIsConnected] = useState({ youtube: false, tiktok: false });
+  const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isRunning, setIsRunning] = useState(false);
 
-  // 🔥 NEW STATE (ULTIMATE ENGINE)
-  const [results, setResults] = useState<ResultItem[]>([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-
-  // ================= FETCH =================
-  const fetchWorkflows = useCallback(async () => {
-    setLoading(true);
-
-    const { data } = await supabase
-      .from('workflows')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    const mapped = (data || []).map((wf: any) => ({
-      ...wf,
-      status: wf.status || 'idle',
-      progress: wf.status === 'success' ? 100 : 0
-    }));
-
-    setWorkflows(mapped);
-    setLoading(false);
-  }, [supabase]);
-
+  // Load connected accounts from database
   useEffect(() => {
-    fetchWorkflows();
-  }, [fetchWorkflows]);
+    loadConnectedAccounts();
+  }, []);
 
-  // ================= RUN ULTIMATE ENGINE =================
-  const runUltimateEngine = async () => {
-    setIsRunning(true);
-    toast.loading('Menjalankan AI Auto System...', { id: 'run' });
-
+  const loadConnectedAccounts = async () => {
     try {
-      const res = await fetch('/api/automation/ultimate-engine', {
-        method: 'POST',
-        body: JSON.stringify({ userId: 'demo-user' })
-      });
-
+      const res = await fetch('/api/integrations/accounts');
       const data = await res.json();
-
-      if (!data.success) throw new Error();
-
-      setResults(data.data);
-
-      // hitung revenue
-      const total = data.data.reduce(
-        (sum: number, item: any) => sum + (item.earning?.revenue || 0),
-        0
-      );
-
-      setTotalRevenue(total);
-
-      toast.success('Sistem berjalan sukses 🚀', { id: 'run' });
-
-    } catch {
-      toast.error('Gagal menjalankan sistem', { id: 'run' });
+      setConnectedAccounts(data.accounts);
+      setIsConnected({
+        youtube: data.accounts.some((a: any) => a.platform === 'youtube'),
+        tiktok: data.accounts.some((a: any) => a.platform === 'tiktok')
+      });
+    } catch (error) {
+      console.error('Failed to load accounts:', error);
+    } finally {
+      setLoading(false);
     }
-
-    setIsRunning(false);
   };
 
-  // ================= SELECT =================
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
+  const handleConnect = (platform: 'youtube' | 'tiktok') => {
+    window.location.href = `/api/auth/${platform}`;
   };
 
-  // ================= UI =================
+  const canStartAutomation = isConnected.youtube || isConnected.tiktok;
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6">
-      <div className="max-w-6xl mx-auto">
-
-        {/* HEADER */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow mb-6">
-          <h1 className="text-2xl font-black flex items-center gap-2">
-            <Activity className="text-blue-600" />
-            WORKFLOW AUTOMATION (ULTIMATE)
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Workflow Automation
           </h1>
-          <p className="text-sm text-gray-500">
-            Auto generate → upload → monetize → retry AI
+          <p className="text-gray-400 mt-2">
+            Hubungkan akun sosial media Anda untuk memulai automation video
           </p>
-
-          {/* ACTION */}
-          <div className="flex gap-3 mt-4">
-            <button
-              onClick={runUltimateEngine}
-              disabled={isRunning}
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2"
-            >
-              {isRunning ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Play size={18} />
-              )}
-              RUN AUTO SYSTEM
-            </button>
-
-            <button
-              onClick={fetchWorkflows}
-              className="px-4 py-2 bg-gray-200 rounded-xl flex items-center gap-2"
-            >
-              <RefreshCcw size={16} />
-              Refresh
-            </button>
-          </div>
         </div>
 
-        {/* STATS */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-xl text-center">
-            <TrendingUp className="mx-auto text-blue-500" />
-            <p className="text-lg font-bold">{results.length}</p>
-            <p className="text-xs">Konten Diproses</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl text-center">
-            <CheckCircle2 className="mx-auto text-green-500" />
-            <p className="text-lg font-bold">
-              {results.filter(r => r.status === 'success').length}
-            </p>
-            <p className="text-xs">Sukses</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl text-center">
-            <DollarSign className="mx-auto text-yellow-500" />
-            <p className="text-lg font-bold">Rp {totalRevenue}</p>
-            <p className="text-xs">Revenue</p>
-          </div>
-        </div>
-
-        {/* RESULT LIST */}
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl">
-          <h2 className="font-bold mb-3">Hasil AI Automation</h2>
-
-          {results.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              Belum ada data...
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {results.map((r, i) => (
-                <div
-                  key={i}
-                  className="border p-3 rounded-xl flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-semibold">{r.keyword}</p>
-                    <p className="text-xs text-gray-500">
-                      Retry: {r.retry}
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <p
-                      className={`text-xs font-bold ${
-                        r.status === 'success'
-                          ? 'text-green-500'
-                          : 'text-red-500'
-                      }`}
-                    >
-                      {r.status}
-                    </p>
-                    <p className="text-xs">
-                      Rp {r.earning?.revenue || 0}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* WORKFLOW LIST (EXISTING) */}
-        <div className="mt-6">
-          <h2 className="font-bold mb-3 flex items-center gap-2">
-            <ListChecks size={16} /> Workflow List
-          </h2>
-
-          {loading ? (
-            <Loader2 className="animate-spin" />
-          ) : (
-            workflows.map(wf => (
-              <div
-                key={wf.id}
-                className="p-3 border rounded-lg mb-2 flex justify-between"
-              >
-                <div>
-                  <p className="font-semibold">{wf.name}</p>
-                  <p className="text-xs">{wf.status}</p>
-                </div>
-
-                {wf.status === 'failed' && (
-                  <ShieldAlert className="text-red-500" />
-                )}
+        {/* Connection Cards */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* YouTube Card */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Youtube className="w-8 h-8 text-red-500" />
+                <h2 className="text-xl font-semibold text-white">YouTube</h2>
               </div>
-            ))
+              {isConnected.youtube && (
+                <CheckCircle className="w-6 h-6 text-green-400" />
+              )}
+            </div>
+            
+            {isConnected.youtube ? (
+              <div className="space-y-3">
+                {connectedAccounts
+                  .filter(acc => acc.platform === 'youtube')
+                  .map(acc => (
+                    <div key={acc.channelId} className="bg-white/5 rounded-lg p-3">
+                      <p className="text-white font-medium">{acc.channelName}</p>
+                      <p className="text-sm text-gray-400">
+                        {acc.subscribers?.toLocaleString()} subscribers
+                      </p>
+                    </div>
+                  ))}
+                <button
+                  onClick={() => handleConnect('youtube')}
+                  className="w-full mt-2 px-4 py-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition"
+                >
+                  Connect Another Channel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleConnect('youtube')}
+                className="w-full px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2"
+              >
+                <Youtube size={20} />
+                Connect YouTube Channel
+              </button>
+            )}
+          </div>
+
+          {/* TikTok Card */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Music2 className="w-8 h-8 text-pink-500" />
+                <h2 className="text-xl font-semibold text-white">TikTok</h2>
+              </div>
+              {isConnected.tiktok && (
+                <CheckCircle className="w-6 h-6 text-green-400" />
+              )}
+            </div>
+            
+            {isConnected.tiktok ? (
+              <div className="space-y-3">
+                {connectedAccounts
+                  .filter(acc => acc.platform === 'tiktok')
+                  .map(acc => (
+                    <div key={acc.channelId} className="bg-white/5 rounded-lg p-3">
+                      <p className="text-white font-medium">{acc.channelName}</p>
+                    </div>
+                  ))}
+                <button
+                  onClick={() => handleConnect('tiktok')}
+                  className="w-full mt-2 px-4 py-2 bg-pink-600/20 text-pink-400 rounded-lg hover:bg-pink-600/30 transition"
+                >
+                  Connect Another Account
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleConnect('tiktok')}
+                className="w-full px-6 py-3 bg-pink-600 text-white rounded-xl font-semibold hover:bg-pink-700 transition flex items-center justify-center gap-2"
+              >
+                <Music2 size={20} />
+                Connect TikTok Account
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Start Automation Button */}
+        <div className="text-center mb-6">
+          <button
+            onClick={() => setShowSettings(true)}
+            disabled={!canStartAutomation}
+            className={`
+              px-8 py-4 rounded-xl font-bold text-lg transition-all transform
+              flex items-center gap-3 mx-auto
+              ${canStartAutomation 
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:scale-105 cursor-pointer shadow-lg shadow-purple-500/50' 
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              }
+            `}
+          >
+            <Play size={24} />
+            Start Automation
+            {!canStartAutomation && (
+              <AlertCircle size={18} className="text-yellow-400" />
+            )}
+          </button>
+          {!canStartAutomation && (
+            <p className="text-sm text-yellow-400 mt-2">
+              *Connect at least one platform to enable automation
+            </p>
           )}
         </div>
+
+        {/* Automation Settings Modal */}
+        {showSettings && (
+          <AutomationSettings 
+            connectedAccounts={connectedAccounts}
+            onClose={() => setShowSettings(false)}
+            onSave={(settings) => {
+              console.log('Settings saved:', settings);
+              setShowSettings(false);
+            }}
+          />
+        )}
 
       </div>
     </div>
